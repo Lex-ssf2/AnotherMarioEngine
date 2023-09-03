@@ -27,10 +27,13 @@ package com.smbc.bmd
 		private var currentFrame:int = 0;
 		private var animation:Sprite;
 		private var animationTimer:Timer;
+		private var m_manualUpdate:Boolean = false;
+		private var m_sameFrame:Boolean = false;
 		public var m_maxFrame:int = 0;
 		public var m_initFrame:int = 0;
+		public var m_frameDelay:int = 1;
 			
-		public function SpriteSheetAnimation(bitmapDataClass:BitmapData,BMwidth:int = 18,BMheight:int = 18,Xsprites:int = 1,Ysprites:int = 1) 
+		public function SpriteSheetAnimation(bitmapDataClass:BitmapData, BMwidth:int = 18, BMheight:int = 18, Xsprites:int = 1, Ysprites:int = 1, updateB:Boolean = false, viaFrame:Boolean = false, delayF:int = 2) 
 		{
 			spriteWidth = BMwidth;
 			spriteHeight = BMheight;
@@ -41,11 +44,36 @@ package com.smbc.bmd
 			animation = new Sprite();
 			addChild(animation);
 			updateSprites();
-			
-			animationTimer = new Timer(1000 / 18);
-			animationTimer.addEventListener(TimerEvent.TIMER, update);
-			animationTimer.start();
+			m_sameFrame = viaFrame;
+			m_frameDelay = delayF;
+			addEventListener(Event.ADDED_TO_STAGE, init);
+			m_manualUpdate = updateB;
 			m_maxFrame = (Ysprites * Xsprites) - 1;
+		}
+		
+		public function init(e:Event = null):void 
+		{
+			removeEventListener(Event.ADDED_TO_STAGE, init);
+			if (!m_sameFrame)
+			{
+				animationTimer = new Timer(1000 / 18);
+				animationTimer.addEventListener(TimerEvent.TIMER, update);
+				animationTimer.start();
+			}
+			addEventListener(Event.ENTER_FRAME, performAll);
+		}
+		
+		public function updateRender(Independent:Boolean = true, delayFrame:int = 2):void 
+		{
+			animationTimer.removeEventListener(TimerEvent.TIMER, update);
+			removeEventListener(Event.ENTER_FRAME, performAll);
+			if (Independent) m_sameFrame = false;
+			else 
+			{
+				m_sameFrame = true;
+				m_frameDelay = delayFrame;
+			}
+			init();
 		}
 		
 		public function updateColors(original:Array=null,nColor:Array=null):void 
@@ -98,8 +126,14 @@ package com.smbc.bmd
 			animation.graphics.endFill();
 		}
 		
-		public function update(e:Event):void 
+		public function getBMDFrame(frame:int):BitmapData 
 		{
+			return sprites[frame];
+		}
+		
+		public function update(e:Event = null):void 
+		{
+			if (m_manualUpdate) return;
 			currentFrame++
 			if (currentFrame > m_maxFrame){
 				currentFrame = m_initFrame;
@@ -107,11 +141,26 @@ package com.smbc.bmd
 			refreshAnimation();
 		}
 		
+		public function performAll(e:Event = null):void 
+		{
+			if (!m_sameFrame || m_manualUpdate) return;
+			if ((Main.Root.m_level.m_frameInstance) %m_frameDelay == 0)
+			{
+				currentFrame = m_initFrame + (Main.Root.m_level.m_frameInstance / m_frameDelay) % (m_maxFrame - m_initFrame) - 1;
+				update();
+			}
+		}
+		
 		public function setCurrentFrame(frame:int = 0):void 
 		{
 			currentFrame = frame;
 			refreshAnimation();
-		}		
+		}
+		
+		public function getCurrentFrame():int 
+		{
+			return currentFrame;
+		}
 		
 		public function setInitFrame(frame:int = 0,maxFrame:int = 0):void 
 		{
@@ -124,6 +173,11 @@ package com.smbc.bmd
 		public function setTiming(frame:int = 1):void 
 		{
 			animationTimer.delay = (1000 / frame);
+		}
+		
+		public function set manualAnimation(value:Boolean):void 
+		{
+			m_manualUpdate = value;
 		}
 	}
 

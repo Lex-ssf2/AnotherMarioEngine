@@ -1,7 +1,8 @@
 package 
 {
 	import com.smbc.tiles.Block;
-	import com.smbc.utils.Vcam;
+	import com.smbc.tiles.OptimizedBlock;
+	import com.smbc.utils.VcamMC;
 	import flash.display.MovieClip;
 	import flash.display.Sprite;
 	import flash.events.Event;
@@ -27,13 +28,16 @@ package
 		[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
 		[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 		];
+		private var m_optimized_Map:Array = [];
 		
 		private var tileObjects:Array = new Array;
 		private var tilePool:Array = new Array;
 		public var xAxisMin:int;
 		public var xAxisMax:int;
-		public var m_vcam:Vcam;
+		public var m_vcam:VcamMC;
 		public var extraBlocks:int = 2;
+		public var m_test:OptimizedBlock
+		public var m_frameInstance:int = 0;
 		
 		public function Level() 
 		{
@@ -47,14 +51,21 @@ package
 			xAxisMin = 0;
 			xAxisMax = 20;
 			addEventListener(Event.ENTER_FRAME, performAll);
-			m_vcam = new Vcam();
+			m_test = new OptimizedBlock(10, 10,16,0);
+			m_vcam = new VcamMC();
+			m_vcam.scaleX = 0.5;
+			m_vcam.scaleY = 0.5;
 			addChild(m_vcam);
+			/*m_test.x = 200;
+			m_test.y = 200;
+			addChild(m_test);*/
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			// entry point
 		}
 		
 		public function performAll(e:Event):void 
 		{
+			m_frameInstance++;
 			for (var i:int = 0; i < m_map.length; i++)
 			{
 				for (var j:int = xAxisMin - 1; j < xAxisMax + 1; j++) 
@@ -85,21 +96,18 @@ package
 								};
 								tileObjects[i][j] = block;
 							}
+							else continue;
 						}
 						else
 						{
-							if (m_vcam.hitTestObject(tileObjects[i][j]))
+							var collision:int = tileObjects[i][j].hitBlock(m_character);
+							if (tileObjects[i][j].m_type == 4)
 							{
-								//3 is the perfect number idk why
-								var collision:int = tileObjects[i][j].hitBlock(m_character,tileObjects[i][j].getRect(stage), m_character.getRect(stage),2);
-								if (tileObjects[i][j].m_type == 4)
+								if (collision == 2)
 								{
-									if (collision == 2)
-									{
-										m_map[i][j] = 5;
-										tileObjects[i][j].m_type = m_map[i][j];
-										tileObjects[i][j].updateObj();
-									}
+									m_map[i][j] = 5;
+									tileObjects[i][j].m_type = m_map[i][j];
+									tileObjects[i][j].updateObj();
 								}
 							}
 						}
@@ -120,7 +128,7 @@ package
 				}
 			};
 			m_vcam.x = Math.max(m_vcam.width / 2, m_character.x);
-			m_vcam.y = Math.min(m_vcam.height,m_character.y);
+			m_vcam.y = Math.min(m_vcam.height + 170,m_character.y);
 		}
 		
 		private function createCharacter():void 

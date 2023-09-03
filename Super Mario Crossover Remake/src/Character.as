@@ -37,6 +37,7 @@ package
 		public var m_onBlock:int = -1;
 		public var m_onGround:Boolean = false;
 		public var m_friction:Number = 0.9;
+		public var m_overlap:Number = 0.5;
 		
 		public function Character() 
 		{
@@ -159,7 +160,7 @@ package
 			y += m_vy * m_currentScale;
 			
 			//Check collisions with ground
-			if (y != m_floor)
+			if (y + height/2 != m_floor)
 			{
 				m_vy += m_gravity;
 				if (m_coyoteCount < m_coyoteTime && m_onGround)

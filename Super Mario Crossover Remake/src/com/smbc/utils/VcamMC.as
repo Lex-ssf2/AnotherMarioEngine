@@ -10,14 +10,14 @@ package com.smbc.utils
 	 * ...
 	 * @author Josned
 	 */
-	public class Vcam extends MovieClip
+	public class VcamMC extends MovieClip
 	{
 		public var cameraTrans:Transform = new Transform(this);
 		public var stageTrans:Transform;
 		public var m_parent:*;
 		public var rectangle:Sprite = new Sprite();
 		
-		public function Vcam() 
+		public function VcamMC() 
 		{
 			if (stage) init();
 			else addEventListener(Event.ADDED_TO_STAGE, init);
@@ -30,23 +30,19 @@ package com.smbc.utils
 			rectangle.graphics.beginFill(0xFF0000, 0.5);
 			rectangle.graphics.drawRect(-stage.stageWidth / 2, -stage.stageHeight / 2, stage.stageWidth, stage.stageHeight);
 			rectangle.graphics.endFill();
-			//rectangle.visible = false;
-			rectangle.scaleX = 0.7;
-			rectangle.scaleY = 0.7;
-			trace(rectangle.height);
+			rectangle.visible = false;
 			addChild(rectangle);
 			stage.addEventListener(Event.ENTER_FRAME, updatePos);
 		}
 		
 		public function updatePos(e:Event):void 
 		{
-			/*m_parent.filters = filters;
+			m_parent.filters = filters;
 			stageTrans.colorTransform = cameraTrans.colorTransform;
 			var stageMatrix:Matrix = cameraTrans.matrix;
 			stageMatrix.invert();
 			stageMatrix.translate(stage.stageWidth * Math.pow(1/2,stage.stageWidth/rectangle.width), stage.stageHeight * Math.pow(1/2,stage.stageWidth/rectangle.width));
-			stageMatrix.scale(stage.stageWidth/rectangle.width, stage.stageHeight/rectangle.height);
-			stageTrans.matrix = stageMatrix;*/
+			stageTrans.matrix = stageMatrix;
 		}
 		
 	}

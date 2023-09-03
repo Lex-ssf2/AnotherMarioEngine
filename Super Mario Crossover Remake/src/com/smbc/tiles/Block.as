@@ -30,30 +30,34 @@ package com.smbc.tiles
 		private function init(e:Event):void 
 		{
 			removeEventListener(Event.ADDED_TO_STAGE, init);
-			m_animation = new SpriteSheetAnimation(TilesetSkins.getBitmap(0), 16, 16, 8, 4);
+			m_animation = new SpriteSheetAnimation(TilesetSkins.getBitmap(0), 16, 16, 8, 5,true,false);
 			m_animation.x = -16 / 2 ;
 			m_animation.y = -16 / 2 ;
+			m_animation.manualAnimation = true;
 			addChild(m_animation);
 			this.updateObj();
 		}
 		
 		public function updateObj():void 
 		{
+			m_animation.manualAnimation = true;
 			switch (m_type) 
 			{
 				case 2:
-					m_animation.setInitFrame(1, 1);
+					m_animation.setCurrentFrame(1);
 				break;				
 				case 3:
-					m_animation.setInitFrame(8, 8);
+					m_animation.setCurrentFrame(8);
 				break;				
-				case 4:
-					m_animation.setInitFrame(22, 22);
+			case 4:
+					m_animation.setInitFrame(8*4, (8*4) + 4);
+					m_animation.updateRender(false, 6);
+					m_animation.manualAnimation = false;
 				break;				
 				case 5:
-					m_animation.setInitFrame(3, 3);
+					m_animation.setCurrentFrame(3);
 				break;
-				default: m_animation.setInitFrame(0, 0);
+				default: m_animation.setCurrentFrame(0);
 			}
 		}
 		/*if (objClass.y<y && Math.abs(objClass.x -x) < m_collision.width / 2) //&& !objClass.m_isJumping platforms later
@@ -76,40 +80,34 @@ package com.smbc.tiles
 				objClass.y = y + m_collision.height / 2 + objClass.currentHeight / 2;
 				objClass.setySpeed(2);
 			}*/
-		public function hitBlock(objClass:Character,strongRect:Rectangle, weakRect:Rectangle, tolerance:uint = 2, overlap:Number = 0):uint
+		public function hitBlock(objClass:Character, overlap:Number = 4):uint
 		{
-			var overlapRect:Rectangle = strongRect.intersection(weakRect);
-			if (overlapRect.width <= tolerance && overlapRect.height <= tolerance) return 0;
-			if (overlapRect.width >= overlapRect.height)
+			if ((this.hitTestPoint(objClass.x + overlap,objClass.y + objClass.height/2) || this.hitTestPoint(objClass.x - overlap,objClass.y + objClass.height/2)) && !objClass.m_isJumping && objClass.y <= y - overlap)
 			{
-				if (Math.abs(weakRect.x -strongRect.x) < strongRect.width / 2)
-				{
-					if (weakRect.y - weakRect.height/2 < strongRect.y - strongRect.height/2)
-					{
-						objClass.y -= overlapRect.height - overlap; 
-						objClass.m_onGround = true;
-						objClass.m_floor = strongRect.y - strongRect.height/2;
-						objClass.setySpeed(0);
-						return 1; 
-						
-					} else{
-						objClass.y += overlapRect.height - overlap;
-						objClass.setySpeed(4);
-						objClass.m_isJumping = false;
-						return 2;
-					}
-				}
-				
-			} else{
-				if (weakRect.x - weakRect.width/2 < strongRect.x - strongRect.width/2)
-				{
-					objClass.x -= overlapRect.width - overlap; 
-					return 4;
-				} else{
-					objClass.x += overlapRect.width - overlap; 
-					return 8;
-				}
+				objClass.y = y - height/2 - objClass.height / 2; 
+				objClass.m_onGround = true;
+				objClass.m_floor = y - height/2;
+				objClass.setySpeed(0);
+				return 1; 
 			}
+			if (this.hitTestPoint(objClass.x,objClass.y - objClass.height/2) && objClass.y > y +height/2)
+			{
+				objClass.y = y + height/2 + objClass.height / 2;
+				objClass.setySpeed(4);
+				objClass.m_isJumping = false;
+				return 2;
+			}
+			if (this.hitTestPoint(objClass.x + objClass.width / 2, objClass.y))
+			{
+				objClass.x = x - width / 2 - objClass.width / 2;
+				return 4;
+			}
+			if (this.hitTestPoint(objClass.x - objClass.width / 2, objClass.y))
+			{
+				objClass.x = x + width / 2 + objClass.width / 2;
+				return 8;
+			}
+			//No es por nada pero esta programado muy xd
 			return NaN;
 		}
 		
