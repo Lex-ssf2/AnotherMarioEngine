@@ -16,6 +16,7 @@ package com.smbc.utils
 		public var stageTrans:Transform;
 		public var m_parent:*;
 		public var rectangle:Sprite = new Sprite();
+		public var originalMatrix:Matrix = new Matrix;
 		
 		public function VcamMC() 
 		{
@@ -32,6 +33,7 @@ package com.smbc.utils
 			rectangle.graphics.endFill();
 			rectangle.visible = false;
 			addChild(rectangle);
+			originalMatrix = stageTrans.matrix;
 			stage.addEventListener(Event.ENTER_FRAME, updatePos);
 		}
 		
@@ -43,6 +45,13 @@ package com.smbc.utils
 			stageMatrix.invert();
 			stageMatrix.translate(stage.stageWidth * Math.pow(1/2,stage.stageWidth/rectangle.width), stage.stageHeight * Math.pow(1/2,stage.stageWidth/rectangle.width));
 			stageTrans.matrix = stageMatrix;
+		}
+		
+		public function removeListener():void 
+		{
+			stage.removeEventListener(Event.ENTER_FRAME, updatePos);
+			parent.removeChild(this);
+			stageTrans.matrix = originalMatrix;
 		}
 		
 	}

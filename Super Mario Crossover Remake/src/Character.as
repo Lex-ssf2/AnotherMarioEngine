@@ -4,10 +4,13 @@ package
 	import com.senocular.utils.KeyObject;
 	import com.smbc.bmd.MarioSkins;
 	import com.smbc.tiles.Block;
+	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
+	import flash.utils.ByteArray;
+	import flash.net.registerClassAlias;
 	/**
 	 * ...
 	 * @author Josned
@@ -23,6 +26,7 @@ package
 		private var m_shortHopSpeed:Number = 9;
 		private var m_XSpeed:Number = 3;
 		private var m_animation:SpriteSheetAnimation;
+		private var m_currentSheet:SpriteSheetLoader;
 		private var m_currentScale:int;
 		public var m_isWalking:Boolean = false;
 		public var m_gravity:Number = 1.2;
@@ -38,6 +42,7 @@ package
 		public var m_onGround:Boolean = false;
 		public var m_friction:Number = 0.9;
 		public var m_overlap:Number = 0.5;
+		public var copiedVector:Vector.<BitmapData>
 		
 		public function Character() 
 		{
@@ -47,8 +52,8 @@ package
 		
 		private function init(e:Event):void 
 		{
-			m_animation = new SpriteSheetAnimation(MarioSkins.getBitmap(0),16,16,18,1);
-			m_animation.updateColors([0xFF4491be,0xFF29587c],[0,0])
+			m_currentSheet = new SpriteSheetLoader(MarioSkins.getBitmap(0), 16, 16, 18, 1);
+			if(m_animation == null) m_animation = new SpriteSheetAnimation(m_currentSheet.getSprites(),16,16,18,1);
 			m_currentScale = scaleX;
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			m_collision = new Sprite();
@@ -62,11 +67,20 @@ package
 			m_animation.y -= 16 / 2;
 			addChild(m_animation);
 			m_floor = stage.stageHeight;
-			addEventListener(Event.ENTER_FRAME, update);
+			setPaletteSwap([0xFF4491be, 0xFF29587c], [0, 0]);
+			update();
 		}
 		
-		private function update(e:Event):void 
+		public function removeListener():void 
 		{
+			m_animation.removeListener();
+			m_animation = null;
+			parent.removeChild(this);
+		}
+		
+		public function update():void 
+		{
+			m_animation.performAll();
 			if (key.isDown(key.LEFT)){
 				if (m_vx > -m_XSpeed) {
 					m_vx -= m_XSpeed / 6;
@@ -83,7 +97,6 @@ package
 					m_animation.setTiming(14);
 					m_isWalking = true;
 				}
-				m_animation.updateColors([0xFF4491be,0xFF29587c,0xFFb23226], [0,0,changeColor()]);
 			}else if (key.isDown(key.RIGHT)) 
 			{
 				if (m_vx < m_XSpeed){
@@ -102,7 +115,6 @@ package
 					m_animation.setTiming(14);
 					m_isWalking = true;
 				}
-				m_animation.updateColors([0xFF4491be,0xFF29587c,0xFFb23226], [0,0,changeColor()]);
 			}else 
 			{
 				if (m_onGround){
@@ -126,10 +138,18 @@ package
 					m_jumpTime = 0;
 					m_onGround = false;
 					m_animation.setInitFrame(0, 0);
-					if (m_animation.SheetBM.compare(MarioSkins.getBitmap(0)) == 0) m_animation.updateSheet(MarioSkins.getBitmap(1));
-					else m_animation.updateSheet(MarioSkins.getBitmap(0));
-					m_animation.updateColors([0xFF4491be,0xFF29587c],[0,0])
-					
+					/*if (m_animation.SheetBM.compare(MarioSkins.getBitmap(0)) == 0) m_animation.updateSheet(MarioSkins.getBitmap(1));
+					else m_animation.updateSheet(MarioSkins.getBitmap(0));*/
+					if (m_currentSheet.getSheet().compare(MarioSkins.getBitmap(0)) == 0)
+					{
+						m_currentSheet.updateSpriteSheet(MarioSkins.getBitmap(1));
+						m_animation.updateSheet(m_currentSheet.getSprites());
+					}
+					else
+					{
+						m_currentSheet.updateSpriteSheet(MarioSkins.getBitmap(0));
+						m_animation.updateSheet(m_currentSheet.getSprites());
+					}
 				}
 				if (m_isJumping)
 				{
@@ -175,7 +195,16 @@ package
 				m_vy += m_gravity;
 				m_coyoteCount = 0;
 			}
+			setPaletteSwap([0xFF4491be,0xFF29587c,0xFFb23226], [0,0,changeColor()]);
 		}
+		
+		public function setPaletteSwap(original:Array=null,nColor:Array=null):void
+        {
+            if (original != null && nColor != null)
+            {
+                m_animation.replacePalette(m_animation,m_animation.getBMDFrame(m_animation.getCurrentFrame()),original,nColor,true);
+            };
+        }
 		
 		public function get currentHeight():Number
 		{

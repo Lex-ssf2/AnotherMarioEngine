@@ -12,30 +12,48 @@ package com.smbc.tiles
 	{
 		public var m_animation:SpriteSheetAnimation;
 		public var m_type:int = 0;
+		public var m_PosX:int = 0;
+		public var m_PosY:int = 0;
 		public var m_nextType:int = 0;
 		public var m_collision:Sprite;
 		public var m_wasOver:Boolean;
 		
 		public function Block() 
 		{
-			m_collision = new Sprite();
-			m_collision.graphics.beginFill(0, 1);
-			m_collision.graphics.drawRect(x -(16) /2 ,y -(16)/2 , 16 , 16 );
-			m_collision.graphics.endFill();
-			addChild(m_collision);
 			addEventListener(Event.ADDED_TO_STAGE, init);
-
 		}
 		
 		private function init(e:Event):void 
 		{
 			removeEventListener(Event.ADDED_TO_STAGE, init);
-			m_animation = new SpriteSheetAnimation(TilesetSkins.getBitmap(0), 16, 16, 8, 5,true,false);
+			if (m_collision == null) m_collision = new Sprite();
+			m_collision.graphics.beginFill(0, 1);
+			m_collision.graphics.drawRect(-(16) /2 ,-(16)/2 , 16 , 16);
+			m_collision.graphics.endFill();
+			addChild(m_collision);
+			initListener();
+			addChild(m_animation);
+			this.updateObj();
+		}
+		
+		public function removeListener():void 
+		{
+			m_animation.removeListener();
+			m_animation = null;
+			parent.removeChild(this);
+		}		
+		
+		public function initListener():void 
+		{
+			if (m_animation == null) m_animation = new SpriteSheetAnimation(Main.Root.m_currentLoader.getSprites(), 16, 16, 8, 5, true, false);
 			m_animation.x = -16 / 2 ;
 			m_animation.y = -16 / 2 ;
 			m_animation.manualAnimation = true;
-			addChild(m_animation);
-			this.updateObj();
+		}
+		
+		public function PerformAll():void 
+		{
+			m_animation.performAll();
 		}
 		
 		public function updateObj():void 

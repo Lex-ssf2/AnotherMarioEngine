@@ -1,4 +1,4 @@
-package com.smbc.tiles 
+package
 {
 	import flash.display.Sprite;
 	import flash.events.Event;
