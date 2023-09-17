@@ -1,5 +1,6 @@
 package com.smbc.tiles 
 {
+	import com.smbc.character.Character;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.geom.Rectangle;
@@ -45,7 +46,7 @@ package com.smbc.tiles
 		
 		public function initListener():void 
 		{
-			if (m_animation == null) m_animation = new SpriteSheetAnimation(Main.Root.m_currentLoader.getSprites(), 16, 16, 8, 5, true, false);
+			if (m_animation == null) m_animation = new SpriteSheetAnimation(Main.Root.m_currentLoader.getSprites(), 16, 16, 8, 5, true, true);
 			m_animation.x = -16 / 2 ;
 			m_animation.y = -16 / 2 ;
 			m_animation.manualAnimation = true;
@@ -67,7 +68,8 @@ package com.smbc.tiles
 				case 3:
 					m_animation.setCurrentFrame(8);
 				break;				
-			case 4:
+				case 4:
+					m_animation.setCurrentFrame(8*4);
 					m_animation.setInitFrame(8*4, (8*4) + 4);
 					m_animation.updateRender(false, 6);
 					m_animation.manualAnimation = false;
@@ -78,56 +80,51 @@ package com.smbc.tiles
 				default: m_animation.setCurrentFrame(0);
 			}
 		}
-		/*if (objClass.y<y && Math.abs(objClass.x -x) < m_collision.width / 2) //&& !objClass.m_isJumping platforms later
-			{
-				objClass.m_onGround = true;
-				objClass.m_floor = y - m_collision.height / 2;
-				objClass.y = y - m_collision.height / 2 - objClass.currentHeight / 2;
-				objClass.setySpeed(0);
-			}	
-			if (objClass.x + objClass.currentWidth / 2 > x - m_collision.width / 2 && objClass.x < x - m_collision.width / 2 + 7 && Math.abs(objClass.y -y) < m_collision.height / 2)
-			{
-				objClass.x = x - m_collision.width / 2 - objClass.currentWidth / 2;
-			}	
-			if (objClass.x - objClass.currentWidth / 2 < x + m_collision.width / 2 && objClass.x > x + m_collision.width / 2 - 7 && Math.abs(objClass.y -y) < m_collision.height / 2)
-			{
-				objClass.x = x + m_collision.width / 2 + objClass.currentWidth / 2;
-			}		
-			if (objClass.y > y+m_collision.height/2 && Math.abs(objClass.x -x) < m_collision.width / 2)
-			{
-				objClass.y = y + m_collision.height / 2 + objClass.currentHeight / 2;
-				objClass.setySpeed(2);
-			}*/
-		public function hitBlock(objClass:Character, overlap:Number = 4):uint
+		
+		public function blockIteration():void 
 		{
-			if ((this.hitTestPoint(objClass.x + overlap,objClass.y + objClass.height/2) || this.hitTestPoint(objClass.x - overlap,objClass.y + objClass.height/2)) && !objClass.m_isJumping && objClass.y <= y - overlap)
-			{
-				objClass.y = y - height/2 - objClass.height / 2; 
-				objClass.m_onGround = true;
-				objClass.m_floor = y - height/2;
-				objClass.setySpeed(0);
-				return 1; 
+			m_animation.manualAnimation = true;
+			switch (m_type) 
+			{			
+				case 4:
+					m_animation.setCurrentFrame(3);
+				break;				
+				case 5:
+					trace("Delete Block");
+				break;
+				default: m_animation.setCurrentFrame(3);
 			}
-			if (this.hitTestPoint(objClass.x,objClass.y - objClass.height/2) && objClass.y > y +height/2)
+		}
+		
+		/*public function hitBlock(objClass:*):uint
+		{
+			if (m_collision.hitTestPoint(objClass.x,objClass.y + objClass.height/2 + Math.max(objClass.getySpeed(),1)) && objClass.y + objClass.height/2 >= y - height)
+			{
+				objClass.y = y - height / 2 - objClass.height / 2;
+				objClass.setOnGround(true);
+				objClass.setFloor(y - height);
+				if(!objClass.getJumping()) objClass.setySpeed(0);
+				return 1;
+			}
+			if (m_collision.hitTestPoint(objClass.x,objClass.y - objClass.height/2) && objClass.y > y +height/2)
 			{
 				objClass.y = y + height/2 + objClass.height / 2;
 				objClass.setySpeed(4);
-				objClass.m_isJumping = false;
+				objClass.setJumping(false);
 				return 2;
 			}
-			if (this.hitTestPoint(objClass.x + objClass.width / 2, objClass.y))
+			if (m_collision.hitTestPoint(objClass.x + objClass.width / 2, objClass.y))
 			{
 				objClass.x = x - width / 2 - objClass.width / 2;
 				return 4;
 			}
-			if (this.hitTestPoint(objClass.x - objClass.width / 2, objClass.y))
+			if (m_collision.hitTestPoint(objClass.x - objClass.width / 2, objClass.y))
 			{
 				objClass.x = x + width / 2 + objClass.width / 2;
 				return 8;
 			}
-			//No es por nada pero esta programado muy xd
 			return NaN;
-		}
+		}*/
 		
 	}
 

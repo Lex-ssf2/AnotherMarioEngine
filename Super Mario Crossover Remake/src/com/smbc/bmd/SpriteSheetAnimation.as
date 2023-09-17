@@ -17,14 +17,11 @@ package com.smbc.bmd
 	public class SpriteSheetAnimation extends Sprite
 	{
 		
-		/*private var spriteSheetData:BitmapData;
-		private var ogSpriteSheetData:BitmapData;
-		private var spriteSheet:Bitmap;*/
 		private var spriteWidth:int = 0;
 		private var spriteHeight:int = 0;
 		private var numXSprites:int = 0;
 		private var numYSprites:int = 0;
-		private var sprites:Array;
+		private var sprites:Vector.<BitmapData>;
 		private var currentFrame:int = 0;
 		private var animation:Sprite;
 		private var m_manualUpdate:Boolean = false;
@@ -35,7 +32,7 @@ package com.smbc.bmd
 		public var m_actualFrame:int = 0;
 		public var __cachedPalette:Dictionary = new Dictionary(true);
 			
-		public function SpriteSheetAnimation(spritesArray:Array, BMwidth:int = 18, BMheight:int = 18, Xsprites:int = 1, Ysprites:int = 1, updateB:Boolean = false, viaFrame:Boolean = false, delayF:int = 2) 
+		public function SpriteSheetAnimation(spritesArray:Vector.<BitmapData>, BMwidth:int = 18, BMheight:int = 18, Xsprites:int = 1, Ysprites:int = 1, updateB:Boolean = false, viaFrame:Boolean = false, delayF:int = 2) 
 		{
 			spriteWidth = BMwidth;
 			spriteHeight = BMheight;
@@ -44,21 +41,13 @@ package com.smbc.bmd
 			m_sameFrame = viaFrame;
 			m_frameDelay = delayF;
 			m_manualUpdate = updateB;
-			if (m_sameFrame)
-			{
-				sprites = spritesArray;
-			}
-			else 
-			{
-				sprites = spritesArray;
-			}
+			sprites = spritesArray.slice();
 			addEventListener(Event.ADDED_TO_STAGE, init);
 		}
 		
 		public function init(e:Event = null):void 
 		{
 			removeEventListener(Event.ADDED_TO_STAGE, init);
-			//if(spriteSheet == null) spriteSheet = new Bitmap(ogSpriteSheetData);
 			if (animation == null) animation = new Sprite();
 			addChild(animation);
 			m_maxFrame = (numXSprites * numYSprites) - 1;
@@ -66,22 +55,16 @@ package com.smbc.bmd
 		
 		public function removeListener():void 
 		{
-			/*if (spriteSheetData != null)
-			{
-				spriteSheetData.dispose();
-				spriteSheetData = null;
-			}
-			if (ogSpriteSheetData != null)
-			{
-				ogSpriteSheetData.dispose();
-				ogSpriteSheetData = null;
-			}*/	
 			freeBitmapData();
 			parent.removeChild(this);
 		}
 		
 		public function freeBitmapData():void 
 		{
+
+			animation.graphics.clear();
+			animation = null;
+			if (m_sameFrame) return;
 			for (var i:int = 0; i < sprites.length; i++) 
 			{
 				if (sprites[i] != null)
@@ -90,14 +73,6 @@ package com.smbc.bmd
 					sprites[i] = null;
 				}
 			}
-			animation.graphics.clear();
-			/*if (spriteSheet.bitmapData != null)
-			{
-				spriteSheet.bitmapData.dispose();
-				spriteSheet.bitmapData = null;
-			}
-			spriteSheet = null;*/
-			animation = null;
 			sprites.splice(0, sprites.length);
 		}
 		
@@ -112,6 +87,11 @@ package com.smbc.bmd
 				m_sameFrame = true;
 				m_frameDelay = delayFrame;
 			}
+		}
+		
+		public function updateDelay(delayFrame:int = 2):void 
+		{
+			m_frameDelay = delayFrame;
 		}
 		
 		public function refreshAnimation():void 
@@ -173,7 +153,6 @@ package com.smbc.bmd
 		public function setInitFrame(frame:int = 0,maxFrame:int = 0):void 
 		{
 			m_initFrame = frame;
-			currentFrame = frame;
 			m_maxFrame = maxFrame;
 			refreshAnimation();
 		}
@@ -204,14 +183,12 @@ package com.smbc.bmd
 					else
 					{
 						bitmap.copyPixels(currentObj.__cachedPalette[bitmap], new Rectangle(0, 0, currentObj.__cachedPalette[bitmap].width, currentObj.__cachedPalette[bitmap].height), new Point())
-						//bitmap.draw(currentObj.__cachedPalette[bitmap]);
 					};
 				};
 				if (original && nColor)
 				{
 					replacePaletteHelper(bitmap,original,nColor);
 				};
-				//bitmap.smoothing = false;
             };
         }
 
@@ -228,11 +205,11 @@ package com.smbc.bmd
             };
         }
 		
-		public function updateSheet(input:Array):void 
+		public function updateSheet(input:Vector.<BitmapData>):void 
 		{
-			for (var i:int = 0; i < sprites.length; i++) 
+			for (var i:int = 0; i < input.length; i++) 
 			{
-				sprites[i] = input[i]
+				sprites[i] = input[i].clone();
 			};
 		}
 		

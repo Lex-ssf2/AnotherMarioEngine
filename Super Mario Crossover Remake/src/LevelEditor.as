@@ -15,7 +15,7 @@ package
 	
 	public class LevelEditor extends Sprite 
 	{
-		private var m_grid:Sprite
+		public var m_grid:Sprite
 		
 		[Embed(source = "com/smbc/bmd/LevelEditorGrid.png")]
 		private var m_gridClass:Class;
@@ -27,12 +27,13 @@ package
 		private var m_removeButton:Sprite = new Sprite;
 		private var m_limit:int = 1;
 		private var m_mode:int = 0;
-		private var m_tiles:Array = new Array;
+		public var m_tiles:Array = new Array();
 		private var tile:Block;
 		private var key:KeyObject;
-		private var m_valueTile:int = 0;
-		private var m_isMouseDown:Boolean = false;
+		public var m_valueTile:int = 0;
+		public var m_isMouseDown:Boolean = false;
 		private var m_loadedLevel:Array;
+		public var m_tileContainer:MovieClip = new MovieClip();
 		
 		public function LevelEditor(loadedLevel:Array = null) 
 		{
@@ -56,8 +57,7 @@ package
 			m_grid.graphics.moveTo(0, 16 * 16);
 			m_grid.graphics.lineTo(stage.stageHeight, 16 * 16);
 			addChild(m_grid);
-			m_grid.x = (16 * 2);
-			m_grid.y = (16 * 2);
+			addChild(m_tileContainer);
 			/*m_addButton.graphics.beginFill(0, 0.5);
 			m_addButton.graphics.drawRect(0, 0,16*3,16*3);
 			m_addButton.graphics.endFill();
@@ -73,9 +73,6 @@ package
 			addChild(m_selectButton);
 			addChild(m_removeButton);*/
 			addEventListener(Event.ENTER_FRAME, update);
-			addEventListener(MouseEvent.MOUSE_DOWN, mouseIsDown);
-			addEventListener(MouseEvent.MOUSE_UP, mouseIsUp);
-			addEventListener(MouseEvent.MOUSE_MOVE, performMouse);
 			if (m_loadedLevel != null)
 			{
 				trace("Hay algo");
@@ -92,114 +89,132 @@ package
 			for each (var tiles:Block in m_tiles) 
 			{
 				m_tiles.splice(m_tiles.indexOf(tiles), 1);
-				tiles.removeEventListener(MouseEvent.CLICK, propiedades);
 				tiles.removeListener();
 				tiles = null;
 			}
+			m_tiles = new Array();
 			for (var i:int = 0; i < m_loadedLevel.length; i++) 
 			{
 				for (var j:int = 0; j < m_loadedLevel[i].length; j++) 
 				{
+					if (!m_loadedLevel[i] || !m_loadedLevel[i][j]) continue;
 					if (m_loadedLevel[i][j] > 0)
 					{
-						tile = null;
-						tile = new Block();
-						tile.m_type = m_loadedLevel[i][j];
-						tile.m_PosX = j
-						tile.m_PosY = i;
-						tile.x = m_grid.x + tile.m_PosX * 16 + tile.width/2;
-						tile.y = m_grid.y + tile.m_PosY * 16 + tile.width / 2;
-						tile.addEventListener(MouseEvent.CLICK, propiedades);
-						m_tiles.push(tile);
-						addChild(tile);
+						m_tiles.push(new Block);
+						m_tiles[m_tiles.length - 1].m_type = m_loadedLevel[i][j];
+						m_tiles[m_tiles.length - 1].m_PosX = j
+						m_tiles[m_tiles.length - 1].m_PosY = i;
+						m_tileContainer.addChild(m_tiles[m_tiles.length - 1]);
+						m_tiles[m_tiles.length - 1].x = m_grid.x + m_tiles[m_tiles.length - 1].m_PosX * 16 + m_tiles[m_tiles.length - 1].width/2;
+						m_tiles[m_tiles.length - 1].y = m_grid.y + m_tiles[m_tiles.length - 1].m_PosY * 16 + m_tiles[m_tiles.length - 1].width / 2;
 					}
 				}
 			}
-			tile = null;
 		}
 		
 		private function update(e:Event = null):void
 		{
-			if (m_mode == 0 && m_tiles[m_valueTile])
+			/*if (m_mode == 0 && m_tiles[m_valueTile])
 			{
 				m_tiles[m_valueTile].PerformAll();
-				var checkMovement:int 
+				var checkMovement:int = 0; 
+				checkMovement = checkCollision();
 				if (key.isDown(38))
 				{
-					checkMovement = checkCollision();
-					if(checkMovement != 1) m_tiles[m_valueTile].y -= 16;
+					if (checkMovement & (1 << 0)) return;
+					m_tiles[m_valueTile].y -= 16;
 				}
-				else if(key.isDown(40) && checkMovement != 2)
+				else if(key.isDown(40))
 				{
-					checkMovement = checkCollision();
+					if (checkMovement & (1 << 1)) return;
 					m_tiles[m_valueTile].y += 16;
 				}
-				if (key.isDown(39) && checkMovement != 3)
+				if (key.isDown(39))
 				{
-					checkMovement = checkCollision();
+					if (checkMovement & (1 << 2)) return; 
 					m_tiles[m_valueTile].x += 16;
 				}
-				else if (key.isDown(37) && checkMovement != 4)
+				else if (key.isDown(37))
 				{
-					checkMovement = checkCollision();
+					if (checkMovement & (1 << 3)) return;
 					m_tiles[m_valueTile].x -= 16;
 				}
 				updatePos(m_valueTile);
-			}
+			}*/
 		}
 		
 		public function removeAllListener():void 
 		{
 			removeEventListener(Event.ENTER_FRAME, update);
-			removeEventListener(MouseEvent.MOUSE_DOWN, mouseIsDown);
-			removeEventListener(MouseEvent.MOUSE_UP, mouseIsUp);
-			removeEventListener(MouseEvent.MOUSE_MOVE, performMouse);
 			for each (var tiles:Block in m_tiles) 
 			{
 				m_tiles.splice(m_tiles.indexOf(tiles), 1);
-				tiles.removeEventListener(MouseEvent.CLICK, propiedades);
 				tiles.removeListener();
 				tiles = null;
 			}
+			removeChild(m_tileContainer);
+			m_tileContainer = null;
 			parent.removeChild(this);
 		}
 		
 		private function checkCollision():int 
 		{
+			var num:int = 0;
 			for (var i:int = 0; i < m_tiles.length; i++) 
 			{
 				if (m_valueTile == i) continue;
-				if (m_tiles[m_valueTile].hitTestPoint(m_tiles[i].x , m_tiles[i].y + m_tiles[i].height)) return 1;
-				if (m_tiles[m_valueTile].hitTestPoint(m_tiles[i].x , m_tiles[i].y - m_tiles[i].height)) return 2;
-				if (m_tiles[m_valueTile].hitTestPoint(m_tiles[i].x - m_tiles[i].width, m_tiles[i].y)) return 3;
-				if (m_tiles[m_valueTile].hitTestPoint(m_tiles[i].x + m_tiles[i].width,m_tiles[i].y)) return 4;
+				if (m_tiles[m_valueTile].hitTestPoint(m_tiles[i].x , m_tiles[i].y + m_tiles[i].height)) num += 1;
+				if (m_tiles[m_valueTile].hitTestPoint(m_tiles[i].x , m_tiles[i].y - m_tiles[i].height)) num += 2;
+				if (m_tiles[m_valueTile].hitTestPoint(m_tiles[i].x - m_tiles[i].width, m_tiles[i].y)) num += 4;
+				if (m_tiles[m_valueTile].hitTestPoint(m_tiles[i].x + m_tiles[i].width, m_tiles[i].y)) num += 8;
+				if (num > Math.pow(2,4)) return num;
 			}
-			return NaN
+			return num;
 		}		
 		
-		private function updatePos(tileNum:int):void 
+		public function updatePos(tileNum:int):void 
 		{
-			m_tiles[m_valueTile].m_PosX = Math.floor(m_tiles[m_valueTile].x / 16)-2;
-			m_tiles[m_valueTile].m_PosY = Math.floor(m_tiles[m_valueTile].y / 16)-2;
+			m_tiles[tileNum].m_PosX = Math.floor(m_tiles[tileNum].x / 16);
+			m_tiles[tileNum].m_PosY = Math.floor(m_tiles[tileNum].y / 16);
+			m_tiles[tileNum].x = m_grid.x + m_tiles[tileNum].m_PosX * 16 + m_tiles[tileNum].width / 2;
+			m_tiles[tileNum].y = m_grid.y + m_tiles[tileNum].m_PosY * 16 + m_tiles[tileNum].height/2
 			return;
 		}
 		
-		private function performMouse(e:MouseEvent = null):void 
+		public function returnPos(tileNum):Point 
+		{
+			return new Point(m_tiles[tileNum].x, m_tiles[tileNum].y);
+		}
+		
+		public function restorePos(tileNum:int):void 
+		{
+			m_tiles[tileNum].x = m_grid.x + m_tiles[tileNum].m_PosX * 16 + m_tiles[tileNum].width / 2;
+			m_tiles[tileNum].y = m_grid.y + m_tiles[tileNum].m_PosY * 16 + m_tiles[tileNum].height / 2;
+			return;
+		}
+		
+		public function removeTile(deletedTile:int):void 
+		{
+			m_tileContainer.removeChild(m_tiles[deletedTile]);
+			m_tiles.splice(deletedTile, 1);
+			return;
+		}
+		
+		public function performMouse(e:MouseEvent = null):void 
 		{
 			if (!m_isMouseDown) return;
 			var localPoint:Point = m_grid.globalToLocal(new Point(e.stageX, e.stageY));
-			var clickedSprite:Sprite = null;
-			if (m_mode == 1)
+			if (m_mode == 2)
 			{
 				for (var i:int = 0; i < m_tiles.length; i++) 
 				{
 					if (!m_tiles[i] || !m_tiles[i].hitTestPoint(e.stageX,e.stageY)) continue;
-					removeChild(m_tiles[i]);
-					m_tiles[i].removeEventListener(MouseEvent.CLICK, propiedades);
+					m_tileContainer.removeChild(m_tiles[i]);
 					m_tiles.splice(i, 1);
 				}
+				return;
 			}
-			if (m_mode == 2)
+			if (m_mode == 1)
 			{
 				var clickedObjects:Array = getObjectsUnderPoint(new Point(e.stageX, e.stageY));
 				if (clickedObjects.length >= 2)
@@ -209,41 +224,30 @@ package
 				}
 				if (Math.floor(localPoint.x / 16) < (16 * m_limit) && Math.floor(localPoint.y / 16) < (16 * m_limit))
 				{
-					var tile:Block = new Block();
-					tile.m_type = 1;
-					tile.m_PosX = Math.floor(localPoint.x / 16);
-					tile.m_PosY = Math.floor(localPoint.y / 16);
-					tile.x = m_grid.x + tile.m_PosX * 16 + tile.width/2;
-					tile.y = m_grid.y + tile.m_PosY * 16 + tile.width / 2;
-					tile.addEventListener(MouseEvent.CLICK, propiedades);
-					m_tiles.push(tile);
-					addChild(tile);
+					if (clickedObjects.length >= 2)
+					{
+						return;
+					}
+					m_tiles.push(new Block());
+					m_tiles[m_tiles.length - 1].m_type = 1;
+					m_tiles[m_tiles.length - 1].m_PosX = Math.floor(localPoint.x / 16);
+					m_tiles[m_tiles.length - 1].m_PosY = Math.floor(localPoint.y / 16);
+					m_tileContainer.addChild(m_tiles[m_tiles.length - 1]);
+					m_tiles[m_tiles.length - 1].x = m_grid.x + m_tiles[m_tiles.length - 1].m_PosX * 16 + m_tiles[m_tiles.length - 1].width/2;
+					m_tiles[m_tiles.length - 1].y = m_grid.y + m_tiles[m_tiles.length - 1].m_PosY * 16 + m_tiles[m_tiles.length - 1].height/2;
 					return;
 				}
 			}
-			return;
-		}		
-		
-		private function mouseIsDown(e:MouseEvent):void 
-		{
-			m_isMouseDown = true;
-			performMouse(e);
-			return;
-		}
-		
-		private function mouseIsUp(e:MouseEvent):void 
-		{
-			m_isMouseDown = false;
 			return;
 		}
 		
 		private function propiedades(e:MouseEvent):void 
 		{
-			if (m_mode != 0 && m_mode != 1) return;
-			var target:Block = e.currentTarget as Block;
-			var index:int = m_tiles.indexOf(e.currentTarget);
+			if (m_mode != 0 && m_mode != 2) return;
+			/*var target:Block = e.currentTarget as Block;
+			//var index:int = m_tiles.indexOf(e.currentTarget);
 			m_valueTile = index;
-			trace("Propiedades",index);
+			//trace("Propiedades",index);
 			/*if (m_mode == 1)
 			{
 				target.parent.removeChild(target);

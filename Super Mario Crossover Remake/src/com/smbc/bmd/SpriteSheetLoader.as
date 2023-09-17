@@ -16,7 +16,7 @@ package com.smbc.bmd
 		private var spriteHeight:int = 0;
 		private var numXSprites:int = 0;
 		private var numYSprites:int = 0;
-		private var m_sprites:Array;
+		private var m_sprites:Vector.<BitmapData>;
 		
 		public function SpriteSheetLoader(LoadedBitmap:BitmapData, BMwidth:int = 18, BMheight:int = 18, Xsprites:int = 1, Ysprites:int = 1)
 		{
@@ -25,7 +25,7 @@ package com.smbc.bmd
 			spriteWidth = BMwidth;
 			numXSprites = Xsprites;
 			numYSprites = Ysprites;
-			m_sprites = new Array();
+			m_sprites = new Vector.<flash.display.BitmapData>(numXSprites * numYSprites,true);
 			init();
 		}
 		
@@ -35,9 +35,9 @@ package com.smbc.bmd
 			updateSprites();
 		}		
 		
-		private function deInit():void 
+		public function deInit():void 
 		{
-			/*if (m_loadedBitmap != null)
+			if (m_loadedBitmap != null)
 			{
 				m_loadedBitmap.dispose();
 				m_loadedBitmap = null;
@@ -47,7 +47,13 @@ package com.smbc.bmd
 				spriteSheet.bitmapData.dispose();
 				spriteSheet.bitmapData = null
 				spriteSheet = null;
-			}*/
+			}
+			for (var i:int = 0; i < m_sprites.length; i++) 
+			{
+				m_sprites[i].dispose();
+				m_sprites[i] = null;
+			}
+			m_sprites.splice(0, m_sprites.length);
 		}
 		
 		public function updateSprites():void 
@@ -68,11 +74,10 @@ package com.smbc.bmd
 		public function updateSpriteSheet(input:BitmapData):void 
 		{
 			spriteSheet.bitmapData = input;
-			m_sprites.splice(0, m_sprites.length);
 			updateSprites();
 		}
 		
-		public function getSprites():Array
+		public function getSprites():Vector.<BitmapData>
 		{
 			return m_sprites;
 		}

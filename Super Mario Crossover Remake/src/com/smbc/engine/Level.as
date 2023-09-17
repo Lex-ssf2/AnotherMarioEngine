@@ -1,5 +1,8 @@
-package 
+package com.smbc.engine 
 {
+	import com.smbc.character.AngryMario;
+	import com.smbc.character.Character;
+	import com.smbc.character.Mario;
 	import com.smbc.levelEditor.Buttons.Play;
 	import com.smbc.tiles.Block;
 	import com.smbc.utils.VcamMC;
@@ -14,22 +17,21 @@ package
 	 */
 	public class Level extends Sprite
 	{
-		private var m_character:Character;
-		private var m_map:Array = new Array();
-		
-		private var tileObjects:Array = new Array;
+		public var m_map:Array = new Array();		
+		public var tileObjects:Array = new Array;
 		private var tilePool:Array = new Array;
 		public var xAxisMin:int;
 		public var xAxisMax:int;
 		public var m_vcam:VcamMC;
-		public var extraBlocks:int = 2;
+		public var extraBlocks:int = 4;
 		public var m_frameInstance:int = 0;
 		public var m_gameMode:int;
 		public var m_editButton:MovieClip;
 		
 		public var lastTime:int = getTimer();
+		public var m_CharacterList:Array = new Array();
 		
-		public var m_test:Character;
+		public var m_enemieTest:Goomba;
 		
 		public function Level(levelData:Array,gameMode:int = 0) 
 		{
@@ -42,9 +44,11 @@ package
 		private function init(e:Event = null):void 
 		{
 			removeEventListener(Event.ADDED_TO_STAGE, init);
+			m_CharacterList.push(new Mario(this));
+			m_CharacterList.push(new AngryMario(this));
 			createCharacter();
 			xAxisMin = 0;
-			xAxisMax = 21;
+			xAxisMax = 25;
 			addEventListener(Event.ENTER_FRAME, performAll,false,0,true);
 			m_vcam = new VcamMC();
 			m_vcam.scaleX = 0.5;
@@ -55,7 +59,8 @@ package
 			{
 				m_editButton = new Play
 				m_vcam.addChild(m_editButton);
-				m_editButton.x = 50;
+				m_editButton.x = 100;
+				m_editButton.y = -50;
 				m_editButton.addEventListener(MouseEvent.CLICK, goingEditorMode,false,0,true);
 			}
 			// entry point
@@ -64,9 +69,13 @@ package
 		public function removeAllListener():void 
 		{
 			removeEventListener(Event.ENTER_FRAME, performAll);
-			m_character.removeListener();
 			m_vcam.removeListener();
-			m_character = null;
+			for (var k:int = 0; k < m_CharacterList.length; k++) 
+			{
+				if (!m_CharacterList[k]) continue;
+				m_CharacterList[k].removeListener()
+				m_CharacterList[k] = null;
+			}
 			m_editButton.removeEventListener(MouseEvent.CLICK, goingEditorMode);
 			for (var i:int = 0; i < tileObjects.length; i++) 
 			{
@@ -159,7 +168,7 @@ package
 			}
 		}
 		
-		private function checkHitboxes():void 
+		public function checkHitboxes(obj:*):void 
 		{
 			for (var i:int = 0; i < m_map.length; i++) 
 			{
@@ -167,18 +176,15 @@ package
 				{
 					if (m_map[i][j] == 0) continue;
 					if (!tileObjects[i] || !tileObjects[i][j]) continue;
-					if (m_map[i - 1][j] == 1 && m_map[i][j + 1] == 1 && m_map[i][j - 1] == 1 &&m_map[i][j] == 1) continue;
-					if (m_map[i - 1][j] == 3 && m_map[i][j + 1] == 3 && m_map[i][j - 1] == 3 &&m_map[i][j] == 3) continue;
-					var collision:int = tileObjects[i][j].hitBlock(m_character);
-					var collision:int = tileObjects[i][j].hitBlock(m_test);
+					if (m_map[Math.max(i - 1,0)][j] == 1 && m_map[i][Math.min(j + 1,m_map[i].length)] == 1 && m_map[i][Math.max(i - 1,0)] == 1 &&m_map[i][j] == 1) continue;
+					if (m_map[Math.max(i - 1,0)][j] == 3 && m_map[i][Math.min(j + 1,m_map[i].length)] == 3 && m_map[i][Math.max(i - 1,0)] == 3 &&m_map[i][j] == 3) continue;
+					obj.SetCollisionNum(obj.hitBlock(tileObjects[i][j]));
 					tileObjects[i][j].PerformAll();
 					if (tileObjects[i][j].m_type == 4)
 					{
-						if (collision == 2)
+						if (obj.CollisionNum == 2)
 						{
-							m_map[i][j] = 5;
-							tileObjects[i][j].m_type = m_map[i][j];
-							tileObjects[i][j].updateObj();
+							tileObjects[i][j].blockIteration();
 						}
 					}
 				}
@@ -189,12 +195,17 @@ package
 		{
 			//Revisar
 			m_frameInstance++;
-			m_character.update();
-			m_test.update();
-			checkHitboxes();
-			if (xAxisMax != Math.min(m_map[2].length, Math.ceil((m_vcam.x + m_vcam.width/2) / 16) + extraBlocks) && xAxisMin != Math.max(0, Math.floor((m_vcam.x - m_vcam.width / 2) / 16)))
+			for (var i:int = 0; i < m_CharacterList.length; i++) 
 			{
-				xAxisMax = Math.min(m_map[2].length, Math.ceil((m_vcam.x + m_vcam.width/2) / 16) + extraBlocks);
+				m_CharacterList[i].update();
+			}
+			if (m_enemieTest.x <= 16 * (xAxisMax - 1) && m_enemieTest.x >= 16 * (xAxisMin - 1))
+			{
+				m_enemieTest.update();
+			}
+			if (xAxisMax != Math.min(m_map[0].length, Math.ceil((m_vcam.x + m_vcam.width/2) / 16) + extraBlocks) && xAxisMin != Math.max(0, Math.floor((m_vcam.x - m_vcam.width / 2) / 16)))
+			{
+				xAxisMax = Math.min(m_map[0].length, Math.ceil((m_vcam.x + m_vcam.width/2) / 16) + extraBlocks);
 				xAxisMin = Math.max(0, Math.floor((m_vcam.x - m_vcam.width / 2) / 16));
 				addingBlocks();
 				removeBlocks();
@@ -282,24 +293,26 @@ package
 				}
 			};*/
 			//if(getChildIndex(m_vcam) < numChildren-1) setChildIndex(m_vcam, numChildren - 1);
-			m_vcam.x = Math.max(m_vcam.width / 2, m_character.x);
-			m_vcam.y = Math.min((m_map.length -1) * 16 - m_vcam.height/2,m_character.y);
+			m_vcam.x = Math.max(m_vcam.width / 2, m_CharacterList[0].x);
+			m_vcam.y = Math.min((m_map.length -1) * 16 - m_vcam.height/2,m_CharacterList[0].y);
 		}
 		
 		private function createCharacter():void 
 		{
-			m_character = new Character();
-			m_test = new Character();
-			m_test.x = m_character.x + 16
+			m_CharacterList[1].x = m_CharacterList[0].x + 16;
 			/*m_character.scaleX = 1;
 			m_character.scaleY = 1;
 			m_character.x = 1 * 16;
 			m_character.graphics.beginFill(0xFF0000);
 			m_character.graphics.drawRect(0, 0, 18, 18);
 			m_character.graphics.endFill();*/
-			
-			addChild(m_character);
-			addChild(m_test);
+			for (var i:int = 0; i < m_CharacterList.length; i++) 
+			{
+				addChild(m_CharacterList[i]);
+			}
+			m_enemieTest = new Goomba(this);
+			m_enemieTest.x = m_CharacterList[1].x + 16 * 5;
+			addChild(m_enemieTest);
 		}
 		
 	}

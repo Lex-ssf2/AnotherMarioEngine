@@ -14,7 +14,7 @@
     </define>
     <define append="true">
       <name>CONFIG::timeStamp</name>
-      <value>'08/09/2023'</value>
+      <value>'17/09/2023'</value>
     </define>
     <define append="true">
       <name>CONFIG::air</name>
@@ -40,7 +40,7 @@
   <file-specs>
     <path-element>C:\Users\Pc\Documents\GitHub\AnotherMarioEngine\Super Mario Crossover Remake\src\Main.as</path-element>
   </file-specs>
-  <default-background-color>#FFFFFF</default-background-color>
+  <default-background-color>#ADAAA7</default-background-color>
   <default-frame-rate>30</default-frame-rate>
   <default-size>
     <width>640</width>
