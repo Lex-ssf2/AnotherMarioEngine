@@ -16,6 +16,8 @@
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>
     <class path="src" />
+    <class path="C:\Program Files (x86)\Adobe\Adobe Flash CS6\Common\Configuration\ActionScript 3.0\projects\Flash\src\fl" />
+    <class path="C:\Program Files (x86)\Adobe\Adobe Flash CS6\Common\Configuration\ActionScript 3.0" />
   </classpaths>
   <!-- Build options -->
   <build>
@@ -54,6 +56,7 @@
   <!-- SWC Libraries -->
   <libraryPaths>
     <element path="src\FlaAssets.swc" />
+    <element path="src\flash.swc" />
   </libraryPaths>
   <!-- External Libraries -->
   <externalLibraryPaths>

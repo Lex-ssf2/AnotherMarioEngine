@@ -71,9 +71,20 @@ package com.smbc.bmd
 			return;
 		}
 
-		public function updateSpriteSheet(input:BitmapData):void 
+		public function updateSpriteSheet(input:BitmapData,BMwidth:int = 18, BMheight:int = 18, Xsprites:int = 1, Ysprites:int = 1):void 
 		{
+			for (var i:int = 0; i < m_sprites.length; i++) 
+			{
+				m_sprites[i].dispose();
+				m_sprites[i] = null;
+			}
+			m_sprites.splice(0, m_sprites.length);
 			spriteSheet.bitmapData = input;
+			spriteHeight = BMheight;
+			spriteWidth = BMwidth;
+			numXSprites = Xsprites;
+			numYSprites = Ysprites;
+			m_sprites = new Vector.<flash.display.BitmapData>(numXSprites * numYSprites,true);
 			updateSprites();
 		}
 		

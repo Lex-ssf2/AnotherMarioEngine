@@ -1,6 +1,10 @@
 package 
 {
+	import com.smbc.character.Mario;
+	import com.smbc.engine.Goomba;
+	import com.smbc.items.Mushroom;
 	import com.smbc.tiles.Block;
+	import com.smbc.tiles.Pipe;
 	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
@@ -27,6 +31,7 @@ package
 		private var m_removeButton:Sprite = new Sprite;
 		private var m_limit:int = 1;
 		private var m_mode:int = 0;
+		private var m_blockType:int = -2;
 		public var m_tiles:Array = new Array();
 		private var tile:Block;
 		private var key:KeyObject;
@@ -34,6 +39,7 @@ package
 		public var m_isMouseDown:Boolean = false;
 		private var m_loadedLevel:Array;
 		public var m_tileContainer:MovieClip = new MovieClip();
+		public var m_currentStartPoint:int = -1;
 		
 		public function LevelEditor(loadedLevel:Array = null) 
 		{
@@ -49,11 +55,11 @@ package
 		{
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			m_grid.graphics.beginBitmapFill(m_gridBmD);
-			m_grid.graphics.drawRect(0, 0, stage.stageWidth, stage.stageHeight);
+			m_grid.graphics.drawRect(0, 0, 16*16*3, 16*16);
 			m_grid.graphics.endFill();
 			m_grid.graphics.lineStyle(1, 0);
 			m_grid.graphics.moveTo(16 * 16, 0);
-			m_grid.graphics.lineTo(16 * 16, stage.stageHeight);			
+			m_grid.graphics.lineTo(16 * 16, 16*16);			
 			m_grid.graphics.moveTo(0, 16 * 16);
 			m_grid.graphics.lineTo(stage.stageHeight, 16 * 16);
 			addChild(m_grid);
@@ -98,15 +104,72 @@ package
 				for (var j:int = 0; j < m_loadedLevel[i].length; j++) 
 				{
 					if (!m_loadedLevel[i] || !m_loadedLevel[i][j]) continue;
-					if (m_loadedLevel[i][j] > 0)
+					if (m_loadedLevel[i][j][0] == 1)
 					{
 						m_tiles.push(new Block);
-						m_tiles[m_tiles.length - 1].m_type = m_loadedLevel[i][j];
+						m_tiles[m_tiles.length - 1].m_type = m_loadedLevel[i][j][1];
+						m_tiles[m_tiles.length - 1].m_Item = m_loadedLevel[i][j][2];
+						m_tiles[m_tiles.length - 1].m_entityNum = m_loadedLevel[i][j][0];
+						m_tiles[m_tiles.length - 1].m_PosX = j
+						m_tiles[m_tiles.length - 1].m_PosY = i;
+						m_tileContainer.addChild(m_tiles[m_tiles.length - 1]);
+						if (m_tiles[m_tiles.length - 1].m_Item > 0)
+						{
+							m_tiles[m_tiles.length - 1].updatePowerUp(new Mushroom(), m_tiles[m_tiles.length - 1].m_Item);
+						}
+						m_tiles[m_tiles.length - 1].x = m_grid.x + m_tiles[m_tiles.length - 1].m_PosX * 16 + m_tiles[m_tiles.length - 1].width/2;
+						m_tiles[m_tiles.length - 1].y = m_grid.y + m_tiles[m_tiles.length - 1].m_PosY * 16 + m_tiles[m_tiles.length - 1].height / 2;
+						continue;
+					}					
+					if (m_loadedLevel[i][j][0] == 2)
+					{
+						m_tiles.push(new Goomba());
+						m_tiles[m_tiles.length - 1].m_type = m_loadedLevel[i][j][1];
+						m_tiles[m_tiles.length - 1].m_entityNum = m_loadedLevel[i][j][0];
 						m_tiles[m_tiles.length - 1].m_PosX = j
 						m_tiles[m_tiles.length - 1].m_PosY = i;
 						m_tileContainer.addChild(m_tiles[m_tiles.length - 1]);
 						m_tiles[m_tiles.length - 1].x = m_grid.x + m_tiles[m_tiles.length - 1].m_PosX * 16 + m_tiles[m_tiles.length - 1].width/2;
-						m_tiles[m_tiles.length - 1].y = m_grid.y + m_tiles[m_tiles.length - 1].m_PosY * 16 + m_tiles[m_tiles.length - 1].width / 2;
+						m_tiles[m_tiles.length - 1].y = m_grid.y + m_tiles[m_tiles.length - 1].m_PosY * 16 + m_tiles[m_tiles.length - 1].height / 2;
+						continue;
+					}					
+					if (m_loadedLevel[i][j][0] == 3)
+					{
+						m_tiles.push(new Pipe());
+						m_tiles[m_tiles.length - 1].m_type = m_loadedLevel[i][j][1];
+						m_tiles[m_tiles.length - 1].m_entityNum = m_loadedLevel[i][j][0];
+						m_tiles[m_tiles.length - 1].size = m_loadedLevel[i][j][2];
+						m_tiles[m_tiles.length - 1].m_PosX = j
+						m_tiles[m_tiles.length - 1].m_PosY = i;
+						m_tileContainer.addChild(m_tiles[m_tiles.length - 1]);
+						m_tiles[m_tiles.length - 1].x = m_grid.x + m_tiles[m_tiles.length - 1].m_PosX * 16 + m_tiles[m_tiles.length - 1].width/2;
+						m_tiles[m_tiles.length - 1].y = m_grid.y + m_tiles[m_tiles.length - 1].m_PosY * 16 + m_tiles[m_tiles.length - 1].height / 2;
+						continue;
+					}
+					if (m_loadedLevel[i][j][0] == 4)
+					{
+						m_tiles.push(new Mario(null));
+						m_currentStartPoint = (m_tiles.length - 1);
+						m_tiles[m_tiles.length - 1].m_type = m_loadedLevel[i][j][1];
+						m_tiles[m_tiles.length - 1].m_entityNum = m_loadedLevel[i][j][0];
+						m_tiles[m_tiles.length - 1].m_PosX = j
+						m_tiles[m_tiles.length - 1].m_PosY = i;
+						m_tileContainer.addChild(m_tiles[m_tiles.length - 1]);
+						m_tiles[m_tiles.length - 1].x = m_grid.x + m_tiles[m_tiles.length - 1].m_PosX * 16 + m_tiles[m_tiles.length - 1].width/2;
+						m_tiles[m_tiles.length - 1].y = m_grid.y + m_tiles[m_tiles.length - 1].m_PosY * 16 + m_tiles[m_tiles.length - 1].height / 2;
+						continue;
+					}
+					if (m_loadedLevel[i][j][0] == 5)
+					{
+						m_tiles.push(new Mushroom());
+						m_tiles[m_tiles.length - 1].m_type = m_loadedLevel[i][j][1];
+						m_tiles[m_tiles.length - 1].m_entityNum = m_loadedLevel[i][j][0];
+						m_tiles[m_tiles.length - 1].m_PosX = j
+						m_tiles[m_tiles.length - 1].m_PosY = i;
+						m_tileContainer.addChild(m_tiles[m_tiles.length - 1]);
+						m_tiles[m_tiles.length - 1].x = m_grid.x + m_tiles[m_tiles.length - 1].m_PosX * 16 + m_tiles[m_tiles.length - 1].width/2;
+						m_tiles[m_tiles.length - 1].y = m_grid.y + m_tiles[m_tiles.length - 1].m_PosY * 16 + m_tiles[m_tiles.length - 1].height / 2;
+						continue;
 					}
 				}
 			}
@@ -146,11 +209,11 @@ package
 		public function removeAllListener():void 
 		{
 			removeEventListener(Event.ENTER_FRAME, update);
-			for each (var tiles:Block in m_tiles) 
+			for (var i:int = 0; i < m_tiles.length; i++) 
 			{
-				m_tiles.splice(m_tiles.indexOf(tiles), 1);
-				tiles.removeListener();
-				tiles = null;
+				m_tiles[i].removeListener();
+				m_tiles[i] = null;
+				m_tiles.splice(i, 1);
 			}
 			removeChild(m_tileContainer);
 			m_tileContainer = null;
@@ -174,10 +237,11 @@ package
 		
 		public function updatePos(tileNum:int):void 
 		{
-			m_tiles[tileNum].m_PosX = Math.floor(m_tiles[tileNum].x / 16);
-			m_tiles[tileNum].m_PosY = Math.floor(m_tiles[tileNum].y / 16);
+			if (!m_tiles[tileNum] || m_mode != 0) return;
+			m_tiles[tileNum].m_PosX = Math.floor((m_tiles[tileNum].x - m_tiles[tileNum].m_collision.width/2 + 8) / 16);
+			m_tiles[tileNum].m_PosY = Math.floor((m_tiles[tileNum].y - m_tiles[tileNum].m_collision.height/2 + 8)  / 16);
 			m_tiles[tileNum].x = m_grid.x + m_tiles[tileNum].m_PosX * 16 + m_tiles[tileNum].width / 2;
-			m_tiles[tileNum].y = m_grid.y + m_tiles[tileNum].m_PosY * 16 + m_tiles[tileNum].height/2
+			m_tiles[tileNum].y = m_grid.y + m_tiles[tileNum].m_PosY * 16 + m_tiles[tileNum].height / 2;
 			return;
 		}
 		
@@ -208,33 +272,70 @@ package
 			{
 				for (var i:int = 0; i < m_tiles.length; i++) 
 				{
-					if (!m_tiles[i] || !m_tiles[i].hitTestPoint(e.stageX,e.stageY)) continue;
+					if (!m_tiles[i] || !m_tiles[i].hitTestPoint(e.stageX, e.stageY)) continue;
+					if (m_tiles[i] is Mario) m_currentStartPoint = -1;
 					m_tileContainer.removeChild(m_tiles[i]);
 					m_tiles.splice(i, 1);
 				}
 				return;
 			}
-			if (m_mode == 1)
+			if (m_mode != 0 && m_mode != 2)
 			{
 				var clickedObjects:Array = getObjectsUnderPoint(new Point(e.stageX, e.stageY));
 				if (clickedObjects.length >= 2)
 				{
-					//trace("Ya hay un objeto");
+					if (m_mode == 6)
+					{
+						for (i = 0; i < clickedObjects.length; i++) 
+						{
+							if (clickedObjects[i].parent.parent is Block && clickedObjects[i].parent.parent.m_hitable)
+							{
+								m_tiles[m_tiles.indexOf(clickedObjects[i].parent.parent)].m_Item = m_blockType;
+								m_tiles[m_tiles.indexOf(clickedObjects[i].parent.parent)].updatePowerUp(new Mushroom(), m_tiles[m_tiles.indexOf(clickedObjects[i].parent.parent)].m_Item);
+							}
+						}
+					}
 					return;
 				}
-				if (Math.floor(localPoint.x / 16) < (16 * m_limit) && Math.floor(localPoint.y / 16) < (16 * m_limit))
+				if (Math.floor(localPoint.x / 16) < (16 * 3) && Math.floor(localPoint.y / 16) < (16 * m_limit) && e.stageX > 33)
 				{
 					if (clickedObjects.length >= 2)
 					{
 						return;
 					}
-					m_tiles.push(new Block());
-					m_tiles[m_tiles.length - 1].m_type = 1;
-					m_tiles[m_tiles.length - 1].m_PosX = Math.floor(localPoint.x / 16);
-					m_tiles[m_tiles.length - 1].m_PosY = Math.floor(localPoint.y / 16);
-					m_tileContainer.addChild(m_tiles[m_tiles.length - 1]);
-					m_tiles[m_tiles.length - 1].x = m_grid.x + m_tiles[m_tiles.length - 1].m_PosX * 16 + m_tiles[m_tiles.length - 1].width/2;
-					m_tiles[m_tiles.length - 1].y = m_grid.y + m_tiles[m_tiles.length - 1].m_PosY * 16 + m_tiles[m_tiles.length - 1].height/2;
+					if (m_blockType == 0) return;
+					switch (m_mode) 
+					{
+						case 1:
+							m_tiles.push(new Block());
+						break;
+						case 3:
+							m_tiles.push(new Goomba());
+						break;						
+						case 4:
+							m_tiles.push(new Pipe());
+							m_tiles[m_tiles.length - 1].size = Math.round(Math.random()*10);
+						break;
+						case 5:
+						if (m_currentStartPoint < 0)
+						{
+							m_tiles.push(new Mario());
+							m_currentStartPoint = m_tiles.length - 1;
+						}
+						break;
+						case 6:
+						m_tiles.push(new Mushroom());
+						break;
+						default:
+					}
+					var currentTile:int = m_tiles.length - 1;
+					if (m_mode == 5) currentTile = m_currentStartPoint;
+					m_tiles[currentTile].m_type = m_blockType;
+					m_tiles[currentTile].m_PosX = Math.floor(localPoint.x / 16);
+					m_tiles[currentTile].m_PosY = Math.floor(localPoint.y / 16);
+					m_tileContainer.addChild(m_tiles[currentTile]);
+					m_tiles[currentTile].x = m_grid.x + m_tiles[currentTile].m_PosX * 16 + m_tiles[currentTile].width/2;
+					m_tiles[currentTile].y = m_grid.y + m_tiles[currentTile].m_PosY * 16 + m_tiles[currentTile].height/2;
 					return;
 				}
 			}
@@ -273,6 +374,16 @@ package
 		public function setEditorMode(mode:int):void 
 		{
 			m_mode = mode;
+		}		
+		
+		public function setBlockType(mode:int):void 
+		{
+			m_blockType = mode;
+		}		
+		
+		public function getBlockType():int
+		{
+			return m_blockType;
 		}
 		
 		public function getTiles():Array 

@@ -2,7 +2,7 @@ package com.smbc.character
 {
 	import com.smbc.bmd.*;
 	import com.senocular.utils.KeyObject;
-	import com.smbc.bmd.MarioSkins;
+	import com.smbc.bmd.Characters.Mario.MarioSkins;
 	import com.smbc.engine.Level;
 	import com.smbc.tiles.Block;
 	import flash.display.Bitmap;
@@ -13,6 +13,8 @@ package com.smbc.character
 	import flash.utils.ByteArray;
 	import flash.net.registerClassAlias;
 	import com.smbc.engine.interactiveSprite;
+	import fl.transitions.Tween;
+	import fl.transitions.easing.*;
 	/**
 	 * ...
 	 * @author Josned
@@ -22,7 +24,7 @@ package com.smbc.character
 		private var key:KeyObject;
 		public var m_isWalking:Boolean = false;
 		public var m_pressJump:Boolean = false;
-		public var m_coyoteTime:int = 6;
+		public var m_coyoteTime:int = 3;
 		public var m_coyoteCount:int = 0;
 		public var m_jumpBuffer:int = 0;
 		public var m_jumpBufferMax:int = 6;
@@ -30,10 +32,16 @@ package com.smbc.character
 		public var m_left:Boolean = false;
 		public var m_up:Boolean = false;
 		public var m_down:Boolean = false;
+		public var m_hitEnemy:Boolean = false;
+		public var m_entityNum:int = 4;
+		public var m_transformAnim:int = 0;
+		public var m_state:int = 0;
+		public var m_invincibleFrames:int;
+		public var m_invincible:Boolean = false;
 		
-		public function Character(levelData:Level) 
+		public function Character() 
 		{
-			super(levelData);
+			super();
 		}
 		
 		override protected function init(e:Event):void 
@@ -44,10 +52,64 @@ package com.smbc.character
 		
 		override public function update():void
 		{
+			if (LEVELDATA == null)
+			{
+				m_animation.performAll();
+				return;
+			}
+			if (LEVELDATA.m_levelPaused) return;
 			super.update();
 			m_animation.performAll();
 			buttonPressed();
 			characterMove();
+		}
+		
+		public function transformAnimation(e:Event):void 
+		{
+			m_transformAnim++
+			if (m_transformAnim <= 2)
+			{
+				m_animation.performAll();
+			}
+			if (m_transformAnim % 4 == 0)
+			{
+				this.m_animation.visible = true;
+			}
+			else 
+			{
+				this.m_animation.visible = false;
+			}
+			if (m_transformAnim >= 10)
+			{
+				LEVELDATA.m_levelPaused = false;
+				this.m_animation.visible = true;
+				removeEventListener(Event.ENTER_FRAME, transformAnimation);
+			}
+		}
+		
+		public function gotHit():void 
+		{
+			return;
+		}
+		
+		protected function invicibilityFrames(e:Event = null):void 
+		{
+			m_invincible = true;
+			m_invincibleFrames--
+			if (m_invincibleFrames % 4 == 0)
+			{
+				this.m_animation.visible = true;
+			}
+			else 
+			{
+				this.m_animation.visible = false;
+			}
+			if (m_invincibleFrames <= 0)
+			{
+				removeEventListener(Event.ENTER_FRAME, invicibilityFrames);
+				m_invincibleFrames = 0;
+				m_invincible = false;
+			}
 		}
 		
 		private function buttonPressed():void 
@@ -82,107 +144,9 @@ package com.smbc.character
 			}
 		}
 		
-		private function characterMove():void
+		protected function characterMove():void
 		{
-			if (m_isDead) 
-			{
-				m_animation.setCurrentFrame(17);
-				return;
-			}
-			//Walking
-			if (m_left && !m_right){
-				if (m_vx > -m_XSpeed) {
-					m_vx -= m_XSpeed / 6;
-					if (m_onGround){
-						if (m_vx > 0) {
-							m_animation.setInitFrame(6, 6);
-							m_animation.setCurrentFrame(6);
-						}
-						else if(m_vx < 0 && m_vx > -1) m_isWalking = false;
-					}
-				}
-				else m_vx = -m_XSpeed;
-				scaleX = -m_currentScale;
-				if (m_onGround && !m_isWalking){
-					m_animation.setInitFrame(0, 1);
-					m_animation.setCurrentFrame(1);
-					m_isWalking = true;
-				}
-			}else if (m_right && !m_left) 
-			{
-				if (m_vx < m_XSpeed){
-					m_vx += m_XSpeed / 6;
-					if (m_onGround)
-					{
-						if (m_vx < 0) {
-							m_animation.setInitFrame(6, 6);
-							m_animation.setCurrentFrame(6);
-						}
-						else if(m_vx > 0 && m_vx < 1) m_isWalking = false;					
-					}
-				}
-				else m_vx = m_XSpeed;
-				scaleX = m_currentScale;
-				if (m_onGround && !m_isWalking){
-					m_animation.setInitFrame(0, 1);
-					m_animation.setCurrentFrame(1);
-					m_isWalking = true;
-				}
-			}else 
-			{
-				if (m_onGround){
-					m_animation.setCurrentFrame(0);
-					m_animation.setInitFrame(0, 0);
-					if(m_vx > 0 && scaleX > 0) m_vx -= (m_XSpeed - 1)/6;
-					else if (m_vx < 0 && scaleX < 0) m_vx += (m_XSpeed - 1)/6;
-					else{
-						m_vx = 0;
-					}
-					m_isWalking = false;
-				}
-				else {
-					m_animation.setInitFrame(2, 2);
-					m_animation.setCurrentFrame(2);
-				}
-			}
-			
-			//Jump
-			if (m_up){
-				
-				 m_jumpBuffer++
-				if (m_jumpBuffer < m_jumpBufferMax && m_onGround)
-				{
-					m_isJumping = true;
-					m_isWalking = false;
-					m_jumpTime = 0;
-					m_onGround = false;
-					m_animation.setInitFrame(0, 0);
-					m_animation.setCurrentFrame(0);
-				}
-				if (m_isJumping)
-				{
-					if (!m_onGround) m_animation.setInitFrame(2, 2);
-					if (m_jumpTime < m_maxTime)
-					{
-						m_jumpTime++;
-						m_vy = -m_jumpSpeed
-					}
-					else m_isJumping = false;
-				}
-			}
-			else {
-				if (m_isJumping)
-				{
-					m_onGround = false;
-				}
-				m_isJumping = false;
-				if (!m_onGround) 
-				{
-					m_animation.setInitFrame(2, 2);
-					m_animation.setCurrentFrame(2);
-				}
-				m_jumpBuffer = 0;
-			}
+			return;
 		}
 		
 		override protected function checkGround():void 

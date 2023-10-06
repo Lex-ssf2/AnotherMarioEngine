@@ -10,6 +10,7 @@ package com.smbc.bmd
 	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
 	import flash.utils.Timer;
+	import com.smbc.controller.GameController;
 	/**
 	 * ...
 	 * @author Josned
@@ -23,16 +24,19 @@ package com.smbc.bmd
 		private var numYSprites:int = 0;
 		private var sprites:Vector.<BitmapData>;
 		private var currentFrame:int = 0;
-		private var animation:Sprite;
+		public var animation:Sprite;
 		private var m_manualUpdate:Boolean = false;
+		private var m_definedAnimation:Boolean = false;
 		private var m_sameFrame:Boolean = false;
 		public var m_maxFrame:int = 0;
 		public var m_initFrame:int = 0;
 		public var m_frameDelay:int = 1;
 		public var m_actualFrame:int = 0;
 		public var __cachedPalette:Dictionary = new Dictionary(true);
+		public var currentSheet:Class;
+		private var currentAnimation:Array = [0];
 			
-		public function SpriteSheetAnimation(spritesArray:Vector.<BitmapData>, BMwidth:int = 18, BMheight:int = 18, Xsprites:int = 1, Ysprites:int = 1, updateB:Boolean = false, viaFrame:Boolean = false, delayF:int = 2) 
+		public function SpriteSheetAnimation(spritesArray:Vector.<BitmapData>, BMwidth:int = 18, BMheight:int = 18, Xsprites:int = 1, Ysprites:int = 1,preDefined:Boolean = false, updateB:Boolean = false, viaFrame:Boolean = false, delayF:int = 2) 
 		{
 			spriteWidth = BMwidth;
 			spriteHeight = BMheight;
@@ -42,6 +46,7 @@ package com.smbc.bmd
 			m_frameDelay = delayF;
 			m_manualUpdate = updateB;
 			sprites = spritesArray.slice();
+			m_definedAnimation = preDefined;
 			addEventListener(Event.ADDED_TO_STAGE, init);
 		}
 		
@@ -50,19 +55,20 @@ package com.smbc.bmd
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			if (animation == null) animation = new Sprite();
 			addChild(animation);
-			m_maxFrame = (numXSprites * numYSprites) - 1;
+			m_maxFrame = 0;
+			animation.y = -spriteHeight / 2;
+			animation.x = -spriteWidth / 2;
 		}
 		
 		public function removeListener():void 
 		{
 			freeBitmapData();
-			parent.removeChild(this);
+			if(parent != null) parent.removeChild(this);
 		}
 		
 		public function freeBitmapData():void 
 		{
-
-			animation.graphics.clear();
+			if(animation != null) animation.graphics.clear();
 			animation = null;
 			if (m_sameFrame) return;
 			for (var i:int = 0; i < sprites.length; i++) 
@@ -97,8 +103,9 @@ package com.smbc.bmd
 		public function refreshAnimation():void 
 		{
 			animation.graphics.clear();
-			animation.graphics.beginBitmapFill(sprites[currentFrame]);
-			animation.graphics.drawRect(0, 0, spriteWidth, spriteHeight);
+			if (m_definedAnimation == true) animation.graphics.beginBitmapFill(sprites[currentAnimation[currentFrame]]);
+			else animation.graphics.beginBitmapFill(sprites[currentFrame]);
+			animation.graphics.drawRect( 0, 0, spriteWidth, spriteHeight);
 			animation.graphics.endFill();
 		}
 		
@@ -131,9 +138,9 @@ package com.smbc.bmd
 				m_actualFrame++
 				return;
 			}
-			if ((Main.Root.m_level.m_frameInstance) %m_frameDelay == 0)
+			if ((GameController.currentLevel.m_frameInstance) %m_frameDelay == 0)
 			{
-				currentFrame = m_initFrame + (Main.Root.m_level.m_frameInstance / m_frameDelay) % (m_maxFrame - m_initFrame) - 1;
+				currentFrame = m_initFrame + (GameController.currentLevel.m_frameInstance / m_frameDelay) % (m_maxFrame - m_initFrame) - 1;
 				update();
 			}
 			return;
@@ -143,11 +150,24 @@ package com.smbc.bmd
 		{
 			currentFrame = frame;
 			refreshAnimation();
+		}		
+		
+		public function setCurrentAnimation(animation:Array):void 
+		{
+			if (currentAnimation != animation)
+			{
+				currentFrame = 0;
+				currentAnimation = animation;
+			}
+			m_initFrame = 0;
+			m_maxFrame = animation.length - 1;
+			refreshAnimation();
 		}
 		
 		public function getCurrentFrame():int 
 		{
-			return currentFrame;
+			if (!m_definedAnimation) return currentFrame;
+			return currentAnimation[currentFrame];
 		}
 		
 		public function setInitFrame(frame:int = 0,maxFrame:int = 0):void 
@@ -205,8 +225,12 @@ package com.smbc.bmd
             };
         }
 		
-		public function updateSheet(input:Vector.<BitmapData>):void 
+		public function updateSheet(input:Vector.<BitmapData>, BMwidth:int = 18, BMheight:int = 18, Xsprites:int = 1, Ysprites:int = 1):void 
 		{
+			spriteWidth = BMwidth;
+			spriteHeight = BMheight;
+			numXSprites = Xsprites;
+			numYSprites = Ysprites;
 			for (var i:int = 0; i < input.length; i++) 
 			{
 				sprites[i] = input[i].clone();

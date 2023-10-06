@@ -3,8 +3,10 @@ package com.smbc.engine
 	import com.senocular.utils.KeyObject;
 	import com.smbc.bmd.SpriteSheetAnimation;
 	import com.smbc.bmd.SpriteSheetLoader;
+	import com.smbc.tiles.Block;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import com.smbc.controller.GameController;
 	
 	/**
 	 * ...
@@ -12,32 +14,39 @@ package com.smbc.engine
 	 */
 	public class interactiveSprite extends Sprite 
 	{
-		protected var LEVELDATA:Level;
-		protected var m_animation:SpriteSheetAnimation;
-		protected var m_currentSheet:SpriteSheetLoader;
-		protected var m_vx:Number = 0;
-		protected var m_vy:Number = 0;
-		protected var m_currentScale:int;
-		protected var m_friction:Number = 0.9;
-		protected var m_onGround:Boolean = false;
-		protected var m_overlap:Number = 0.5;
-		protected var m_collision:Sprite;
-		protected var m_floor:int;
-		protected var m_gravity:Number = 1.2;
-		protected var m_maxTime:int = 10;
-		protected var m_jumpTime:int = 0;
-		protected var m_jumpSpeed:Number = 7;
-		protected var m_shortHopSpeed:Number = 9;
-		protected var m_XSpeed:Number = 3;
-		protected var m_isJumping:Boolean = false;
-		protected var m_CollisionNum:uint;
-		protected var m_facingRight:Boolean = true;
+		public var LEVELDATA:Level;
+		public var m_animation:SpriteSheetAnimation;
+		public var m_currentSheet:SpriteSheetLoader;
+		public var m_vx:Number = 0;
+		public var m_vy:Number = 0;
+		public var m_currentScale:int;
+		public var m_friction:Number = 0.9;
+		public var m_onGround:Boolean = false;
+		public var m_overlap:Number = 0.5;
+		public var m_collision:Sprite;
+		public var m_floor:int;
+		public var m_gravity:Number = 1.2;
+		public var m_maxTime:int = 10;
+		public var m_jumpTime:int = 0;
+		public var m_jumpSpeed:Number = 7;
+		public var m_shortHopSpeed:Number = 9;
+		public var m_XSpeed:Number = 3;
+		public var m_isJumping:Boolean = false;
+		public var m_CollisionNum:uint;
+		public var m_facingRight:Boolean = true;
 		public var m_isDead:Boolean = false;
 		public var m_ignoreTerrain:Boolean = false;
+		public var m_type:int = 0;
+		public var m_PosX:int = 0;
+		public var m_PosY:int = 0;
+		public var mapX:int = -1;
+		public var mapY:int = -1;
+		public var m_animationName:String = "idle";
+		public var m_frontBlock:*;
 		
-		public function interactiveSprite(levelData:Level) 
+		public function interactiveSprite() 
 		{
-			LEVELDATA = levelData;
+			LEVELDATA = GameController.currentLevel;
 			super();
 			addEventListener(Event.ADDED_TO_STAGE, init);
 		}
@@ -69,7 +78,8 @@ package com.smbc.engine
 				
 		protected function checkHitboxes():void 
 		{
-			LEVELDATA.checkHitboxes(this);
+			if (LEVELDATA == null) return;
+			//LEVELDATA.checkHitboxes(this);
 		}
 				
 		protected function currentSpeed():void 
@@ -170,35 +180,85 @@ package com.smbc.engine
 			m_CollisionNum = num;
 		}
 		
-		public function hitBlock(currentBlock:*):uint
+		public function blockIteration(obj:Block):void 
 		{
-			if (m_ignoreTerrain) return NaN;
-			if (currentBlock.hitTestPoint(x,y + height/2 + Math.max(getySpeed(),1)) && y + height/2 >= currentBlock.y - currentBlock.height)
+			setySpeed( -5);
+			obj.m_gotHit = false;
+			return;
+		}
+		
+		public function hitBlock(currentBlock:*):void
+		{
+			if (m_ignoreTerrain) return;
+			if (y + m_collision.height / 2 >= currentBlock.y - currentBlock.m_collision.height)
 			{
-				y = currentBlock.y - currentBlock.height / 2 - height / 2;
-				setOnGround(true);
-				setFloor(currentBlock.y - currentBlock.height);
-				if(!getJumping()) setySpeed(0);
-				return 1;
+				if (m_facingRight)
+				{
+					if (currentBlock.m_collision.hitTestPoint(x + m_collision.width + 1,y + m_collision.height/2 + Math.max(getySpeed(),1)))
+					{
+						m_frontBlock = currentBlock;
+					}
+				}
+				else 
+				{
+					if (currentBlock.m_collision.hitTestPoint(x - m_collision.width - 1,y + m_collision.height/2 + Math.max(getySpeed(),1)))
+					{
+						m_frontBlock = currentBlock;
+					}
+				}
+				if (currentBlock.m_collision.hitTestPoint(x,y + m_collision.height/2 + Math.max(getySpeed(),1)))
+				{
+					if (currentBlock is Block && currentBlock.m_gotHit) {
+						blockIteration(currentBlock);
+						SetCollisionNum(1);
+						return;
+					}
+					y = currentBlock.y - currentBlock.m_collision.height / 2 - m_collision.height / 2;
+					setOnGround(true);
+					setFloor(currentBlock.y - currentBlock.m_collision.height/2 - m_collision.height / 2);
+					if (!getJumping()) setySpeed(0);
+					SetCollisionNum(1);
+					return;
+				}
 			}
-			if (currentBlock.hitTestPoint(x,y - height/2) && y > currentBlock.y +currentBlock.height/2)
+			if (currentBlock.m_collision.hitTestPoint(x,y - m_collision.height/2) && y > currentBlock.y +currentBlock.m_collision.height/2)
 			{
-				y = currentBlock.y + currentBlock.height/2 + height / 2;
+				y = currentBlock.y + currentBlock.m_collision.height / 2 + m_collision.height / 2;
+				if (getOnGround()) return;
+				if (currentBlock.m_hitable && !getOnGround())
+				{
+					currentBlock.blockIteration(this);
+				}
 				setySpeed(4);
 				setJumping(false);
-				return 2;
+				SetCollisionNum(2);
+				return;
 			}
-			if (currentBlock.hitTestPoint(x + width / 2, y))
+			if (currentBlock.m_collision.hitTestPoint(x + m_collision.width / 2, y))
 			{
-				x = currentBlock.x - currentBlock.width / 2 - width / 2;
-				return 4;
+				x = currentBlock.x - currentBlock.width / 2 - m_collision.width / 2;
+				SetCollisionNum(4);
+				m_frontBlock = null;
+				return;
 			}
-			if (currentBlock.hitTestPoint(x - width / 2, y))
+			if (currentBlock.m_collision.hitTestPoint(x - m_collision.width / 2, y))
 			{
-				x = currentBlock.x + currentBlock.width / 2 + width / 2;
-				return 8;
+				x = currentBlock.x + currentBlock.width / 2 + m_collision.width / 2;
+				SetCollisionNum(8);
+				m_frontBlock = null;
+				return;
 			}
-			return NaN;
+			return;
+		}
+		
+		public function killEventsEditor():void 
+		{
+			return;
+		}		
+		
+		public function addEventsEditor():void 
+		{
+			return;
 		}
 		
 	}

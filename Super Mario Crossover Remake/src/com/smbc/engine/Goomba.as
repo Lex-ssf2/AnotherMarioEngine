@@ -3,15 +3,18 @@ package com.smbc.engine
 	import com.smbc.bmd.SpriteSheetLoader;
 	import com.smbc.engine.Level;
 	import com.smbc.bmd.*;
+	import com.smbc.tiles.Block;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	
 	public class Goomba extends interactiveSprite 
 	{
+		public var m_entityNum:int = 2;
+		public var m_deadTimer:int = 30;
 		
-		public function Goomba(levelData:Level) 
+		public function Goomba() 
 		{
-			super(levelData);
+			super();
 		}
 		
 		override protected function init(e:Event):void 
@@ -25,11 +28,16 @@ package com.smbc.engine
 			m_collision.graphics.endFill();
 			m_collision.visible = false;
 			addChild(m_collision); //Divi DCD
-			m_animation.x -= 16 / 2;
-			m_animation.y -= 16 / 2;
 			addChild(m_animation);
 			m_XSpeed = 1;
-			m_facingRight = true;
+			if (LEVELDATA != null && LEVELDATA.m_CharacterList[0].x > x)
+			{
+				m_facingRight = true;
+			}
+			else 
+			{
+				m_facingRight = false;
+			}
 			update();
 		}
 		
@@ -38,15 +46,41 @@ package com.smbc.engine
 			super.update();
 			state();
 			m_animation.performAll();
+			if (LEVELDATA == null) return;
 			if (m_isDead) {
 				m_vx = 0;
+				m_deadTimer--
+				if (m_deadTimer <= 0)
+				{
+					LEVELDATA.removeEnemies(LEVELDATA.m_EnemiesList.indexOf(this));
+				}
 				return;
 			}
 			m_vx = m_facingRight ? m_XSpeed : -m_XSpeed;
 			for (var i:int = 0; i < LEVELDATA.m_CharacterList.length; i++) 
 			{
 				hitObj(LEVELDATA.m_CharacterList[i])
+			}			
+			for (i = 0; i < LEVELDATA.m_EnemiesList.length; i++) 
+			{
+				if (i == LEVELDATA.m_EnemiesList.indexOf(this)) continue;
+				hitEnemy(LEVELDATA.m_EnemiesList[i]);
+			}/*
+			if (m_frontBlock != null)
+			{
+				if (x > m_frontBlock.x && m_facingRight)
+				{
+					x = m_frontBlock.x;
+					m_facingRight = false;
+				}
+				if(x < m_frontBlock.x && !m_facingRight)
+				{
+					x = m_frontBlock.x;
+					m_facingRight = true;
+				}
 			}
+			Para que no se caiga
+			*/
 		}
 		
 		public function state():void 
@@ -61,24 +95,41 @@ package com.smbc.engine
 			m_animation.updateDelay(5);
 		}
 		
+		public function hitEnemy(objClass:*, overlap:Number = 4):uint
+		{
+			if (objClass.m_isDead) return NaN;
+			if (this.hitTestPoint(objClass.x + objClass.m_collision.width / 2, objClass.y) && !m_facingRight|| this.hitTestPoint(objClass.x - objClass.m_collision.width / 2, objClass.y) && m_facingRight || this.hitTestPoint(objClass.x, objClass.y - height / 2))
+			{
+				m_facingRight = m_facingRight ? false : true;
+				return 0;
+			}
+			return NaN;
+		}		
+		
 		public function hitObj(objClass:*, overlap:Number = 4):uint
 		{
 			if (objClass.m_isDead) return NaN;
-			if ((this.hitTestPoint(objClass.x,objClass.y + objClass.height/2) || this.hitTestPoint(objClass.x + objClass.width/2,objClass.y + objClass.height/2) || this.hitTestPoint(objClass.x - objClass.width/2,objClass.y + objClass.height/2)) && objClass.y + objClass.height/2 < y) 
+			if ((this.hitTestPoint(objClass.x,objClass.y + objClass.m_collision.height/2 + objClass.getySpeed()) || this.hitTestPoint(objClass.x + objClass.width/2,objClass.y + objClass.m_collision.height/2 + objClass.getySpeed()) || this.hitTestPoint(objClass.x - objClass.width/2,objClass.y + objClass.m_collision.height/2 + objClass.getySpeed())) && objClass.y + objClass.m_collision.height/2 < y) 
 			{
-				if (objClass.m_up) objClass.setySpeed(-15);
+				if (objClass.m_up) objClass.m_hitEnemy = true;
 				else objClass.setySpeed( -5);
 				m_isDead = true;
 				return 1;
 			}
-			if (this.hitTestPoint(objClass.x + objClass.width / 2, objClass.y) || this.hitTestPoint(objClass.x - objClass.width / 2, objClass.y) || this.hitTestPoint(objClass.x, objClass.y - height / 2))
+			if (this.hitTestPoint(objClass.x + objClass.m_collision.width / 2, objClass.y) || this.hitTestPoint(objClass.x - objClass.m_collision.width / 2, objClass.y) || this.hitTestPoint(objClass.x, objClass.y - height / 2))
 			{
-				objClass.setySpeed(-15);
-				objClass.m_isDead = true;
-				objClass.m_ignoreTerrain = true;
+				if (objClass.m_invincible) return 0;
+				objClass.gotHit();
 				return 0;
 			}
 			return NaN;
+		}
+		
+		override public function blockIteration(obj:Block):void 
+		{
+			super.blockIteration(obj);
+			m_isDead = true;
+			return;
 		}
 		
 		override public function SetCollisionNum(num:uint):void
