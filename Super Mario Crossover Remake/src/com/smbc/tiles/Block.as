@@ -218,12 +218,12 @@ package com.smbc.tiles
 				case 0:
 				case 2:
 					e.target.m_XSpeed = -3
-					e.target.rotation -= 10;
-				break;				
+					e.target.rotation -= 15;
+				break;
 				case 1:
 				case 3:
 					e.target.m_XSpeed = 3
-					e.target.rotation += 10;
+					e.target.rotation += 15;
 				break;
 				default:
 			}

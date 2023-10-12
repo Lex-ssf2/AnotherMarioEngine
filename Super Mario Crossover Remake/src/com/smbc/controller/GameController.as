@@ -19,7 +19,7 @@ package com.smbc.controller
 		public static var m_currentLevelData:Array;
 		public static var m_gotoEditor:MovieClip;
 		public static var m_Vcam:VcamMC;
-		public static var m_playerSettings:Array = ["Mario","Mario"];
+		public static var m_playerSettings:Vector.<PlayerSetting> = new Vector.<com.smbc.controller.PlayerSetting>();
 		public static var m_charSelectionScreen:Sprite;
 		
 		public function GameController() 

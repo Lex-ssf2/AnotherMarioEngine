@@ -1,0 +1,11 @@
+{
+	"characters":{
+		"mario":{
+			"file":"data/character/mario.swf"
+		},
+		"luigi":{
+			"file":"data/character/luigi.swf"
+		}
+	},
+	"character_list": ["mario","luigi"]
+}

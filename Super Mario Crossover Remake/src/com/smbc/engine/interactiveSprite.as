@@ -43,6 +43,9 @@ package com.smbc.engine
 		public var mapY:int = -1;
 		public var m_animationName:String = "idle";
 		public var m_frontBlock:*;
+		public var DecelRate:Number = 0;
+		public var AccelRate:Number = 0;
+		public var minimunXSpeed:Number = 0;
 		
 		public function interactiveSprite() 
 		{
@@ -71,7 +74,6 @@ package com.smbc.engine
 		
 		public function update():void 
 		{
-			checkHitboxes();
 			currentSpeed();
 			checkGround();
 		}
@@ -84,7 +86,7 @@ package com.smbc.engine
 				
 		protected function currentSpeed():void 
 		{
-			m_vx *= m_friction;
+			/*m_vx *= m_friction;*/
 			m_vy *= m_friction;
 			x += m_vx * m_currentScale;
 			y += m_vy * m_currentScale;
@@ -189,8 +191,11 @@ package com.smbc.engine
 		
 		public function hitBlock(currentBlock:*):void
 		{
-			if (m_ignoreTerrain) return;
-			if (y + m_collision.height / 2 >= currentBlock.y - currentBlock.m_collision.height)
+			if (m_ignoreTerrain) {
+				SetCollisionNum(0);
+				return;
+			}
+			if (y + m_collision.height/2 + Math.min(m_gravity + m_jumpSpeed,m_vy) >= currentBlock.y - currentBlock.m_collision.height/2)
 			{
 				if (m_facingRight)
 				{
@@ -206,7 +211,8 @@ package com.smbc.engine
 						m_frontBlock = currentBlock;
 					}
 				}
-				if (currentBlock.m_collision.hitTestPoint(x,y + m_collision.height/2 + Math.max(getySpeed(),1)))
+				
+				if (currentBlock.m_collision.hitTestPoint(x,y + m_collision.height/2 + Math.min(m_gravity + m_jumpSpeed,m_vy)))
 				{
 					if (currentBlock is Block && currentBlock.m_gotHit) {
 						blockIteration(currentBlock);
@@ -221,6 +227,8 @@ package com.smbc.engine
 					return;
 				}
 			}
+
+
 			if (currentBlock.m_collision.hitTestPoint(x,y - m_collision.height/2) && y > currentBlock.y +currentBlock.m_collision.height/2)
 			{
 				y = currentBlock.y + currentBlock.m_collision.height / 2 + m_collision.height / 2;
@@ -248,6 +256,7 @@ package com.smbc.engine
 				m_frontBlock = null;
 				return;
 			}
+			SetCollisionNum(0);
 			return;
 		}
 		

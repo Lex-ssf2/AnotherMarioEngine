@@ -2,7 +2,6 @@ package com.smbc.items
 {
 	import com.smbc.bmd.SpriteSheetAnimation;
 	import com.smbc.bmd.SpriteSheetLoader;
-	import com.smbc.character.Mario;
 	import com.smbc.engine.interactiveSprite;
 	import com.smbc.engine.Level;
 	import com.smbc.bmd.Items.*;

@@ -19,11 +19,10 @@ package com.senocular.utils {
 		private static var stage:Stage;
 		private static var keysDown:Object;
 		
-		public function KeyObject(stage:Stage) {
-			construct(stage);
+		public function KeyObject() {
 		}
 		
-		public function construct(stage:Stage):void {
+		public static function construct(stage:Stage):void {
 			KeyObject.stage = stage;
 			keysDown = new Object();
 			stage.addEventListener(KeyboardEvent.KEY_DOWN, keyPressed);
@@ -34,22 +33,22 @@ package com.senocular.utils {
 			return (name in Keyboard) ? Keyboard[name] : -1;
 		}
 		
-		public function isDown(keyCode:uint):Boolean {
+		public static function isDown(keyCode:uint):Boolean {
 			return Boolean(keyCode in keysDown);
 		}
 		
-		public function deconstruct():void {
+		public static function deconstruct():void {
 			stage.removeEventListener(KeyboardEvent.KEY_DOWN, keyPressed);
 			stage.removeEventListener(KeyboardEvent.KEY_UP, keyReleased);
 			keysDown = new Object();
 			KeyObject.stage = null;
 		}
 		
-		private function keyPressed(evt:KeyboardEvent):void {
+		private static function keyPressed(evt:KeyboardEvent):void {
 			keysDown[evt.keyCode] = true;
 		}
 		
-		private function keyReleased(evt:KeyboardEvent):void {
+		private static function keyReleased(evt:KeyboardEvent):void {
 			delete keysDown[evt.keyCode];
 		}
 	}

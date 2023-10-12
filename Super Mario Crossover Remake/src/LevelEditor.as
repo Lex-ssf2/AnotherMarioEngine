@@ -1,6 +1,6 @@
 package 
 {
-	import com.smbc.character.Mario;
+	import com.smbc.character.Character;
 	import com.smbc.engine.Goomba;
 	import com.smbc.items.Mushroom;
 	import com.smbc.tiles.Block;
@@ -34,7 +34,6 @@ package
 		private var m_blockType:int = -2;
 		public var m_tiles:Array = new Array();
 		private var tile:Block;
-		private var key:KeyObject;
 		public var m_valueTile:int = 0;
 		public var m_isMouseDown:Boolean = false;
 		private var m_loadedLevel:Array;
@@ -87,7 +86,6 @@ package
 			/*m_addButton.addEventListener(MouseEvent.CLICK, Adding);
 			m_selectButton.addEventListener(MouseEvent.CLICK, Selecting);
 			m_removeButton.addEventListener(MouseEvent.CLICK, Delete);*/
-			key = new KeyObject(stage);
 		}
 		
 		private function loadLevelData():void 
@@ -148,7 +146,7 @@ package
 					}
 					if (m_loadedLevel[i][j][0] == 4)
 					{
-						m_tiles.push(new Mario(null));
+						m_tiles.push(new Character());
 						m_currentStartPoint = (m_tiles.length - 1);
 						m_tiles[m_tiles.length - 1].m_type = m_loadedLevel[i][j][1];
 						m_tiles[m_tiles.length - 1].m_entityNum = m_loadedLevel[i][j][0];
@@ -273,7 +271,7 @@ package
 				for (var i:int = 0; i < m_tiles.length; i++) 
 				{
 					if (!m_tiles[i] || !m_tiles[i].hitTestPoint(e.stageX, e.stageY)) continue;
-					if (m_tiles[i] is Mario) m_currentStartPoint = -1;
+					if (m_tiles[i] is Character) m_currentStartPoint = -1;
 					m_tileContainer.removeChild(m_tiles[i]);
 					m_tiles.splice(i, 1);
 				}
@@ -319,7 +317,7 @@ package
 						case 5:
 						if (m_currentStartPoint < 0)
 						{
-							m_tiles.push(new Mario());
+							m_tiles.push(new Character());
 							m_currentStartPoint = m_tiles.length - 1;
 						}
 						break;

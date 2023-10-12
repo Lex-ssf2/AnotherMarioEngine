@@ -1,7 +1,8 @@
 package com.smbc.engine 
 {
+	import com.greensock.loading.SWFLoader;
 	import com.smbc.character.Character;
-	import com.smbc.character.base.MarioBase;
+	import com.smbc.controller.CharacterData;
 	import com.smbc.items.Mushroom;
 	import com.smbc.levelEditor.Buttons.Play;
 	import com.smbc.tiles.Block;
@@ -16,7 +17,7 @@ package com.smbc.engine
 	import flash.utils.ByteArray;
 	import flash.utils.getTimer;
 	import com.smbc.controller.GameController;
-	import com.smbc.character.base.CharacterStats;
+	import com.smbc.controller.CharacterStats;
 	/**
 	 * ...
 	 * @author Josned
@@ -65,8 +66,6 @@ package com.smbc.engine
 		{
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			//m_startPoint = Main.Root.m_currentStartPoint;
-			m_CharacterList.push(new MarioBase(CharacterStats,GameController.m_playerSettings[0])); //(GameController.m_playerSettings[1])(this)
-			m_CharacterList.push(new MarioBase(CharacterStats,GameController.m_playerSettings[1]));
 			createCharacter();
 			xAxisMin = 0;
 			xAxisMax = 25;
@@ -501,20 +500,37 @@ package com.smbc.engine
 		
 		private function createCharacter():void 
 		{
-			m_CharacterList[0].x = Main.Root.m_currentStartPoint.x;
-			m_CharacterList[0].y = Main.Root.m_currentStartPoint.y;
-			m_CharacterList[1].x = m_CharacterList[0].x + 16;//+ 16
-			m_CharacterList[1].y = m_CharacterList[0].y;
+			var i:int = 0;
+            for (i = 0; i < GameController.m_playerSettings.length; i++) 
+            {
+                if (GameController.m_playerSettings[i].character == null) continue;
+                makePlayer(i);
+            };
+			for (i = 0; i < m_CharacterList.length; i++) 
+			{
+				m_CharacterList[i].x = Main.Root.m_currentStartPoint.x + (16 * i);
+				m_CharacterList[i].y = Main.Root.m_currentStartPoint.y;
+			}
+			for (i = 0; i < m_CharacterList.length; i++) 
+			{
+				addChild(m_CharacterList[i]);
+			}
 			/*m_character.scaleX = 1;
 			m_character.scaleY = 1;
 			m_character.x = 1 * 16;
 			m_character.graphics.beginFill(0xFF0000);
 			m_character.graphics.drawRect(0, 0, 18, 18);
 			m_character.graphics.endFill();*/
-			for (var i:int = 0; i < m_CharacterList.length; i++) 
-			{
-				addChild(m_CharacterList[i]);
-			}
+		}
+		
+		private function makePlayer(playerNum:int):void 
+		{
+			var characterStats:CharacterData;
+			characterStats = CharacterStats.getStats(GameController.m_playerSettings[playerNum].character);
+			characterStats.importData({
+			"player_id":playerNum
+			});
+			m_CharacterList.push(new Character(characterStats,GameController.m_playerSettings[playerNum]));
 		}
 		
 	}
