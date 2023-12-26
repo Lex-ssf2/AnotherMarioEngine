@@ -4,14 +4,14 @@
   <output>
     <movie outputType="Application" />
     <movie input="" />
-    <movie path="bin\MarioSMBC2.swf" />
+    <movie path="..\..\bin\data\character\mario.swf" />
     <movie fps="30" />
     <movie width="800" />
     <movie height="600" />
     <movie version="25" />
     <movie minorVersion="0" />
     <movie platform="Flash Player" />
-    <movie background="#FFFFFF" />
+    <movie background="#ADAAA7" />
   </output>
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>

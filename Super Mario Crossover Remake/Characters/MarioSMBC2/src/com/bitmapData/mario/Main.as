@@ -4,7 +4,8 @@
 
     public dynamic class Main extends Sprite 
     {
-
+		public var walkSpeed:int = 50;
+		
         public function Main()
         {
         }
@@ -47,11 +48,24 @@
 
         public function basicWalk(curObj:*):void
         {
+			if (curObj.m_button2){
+				walkSpeed--;
+				curObj.m_animation.updateDelay(Math.max(walkSpeed/20,1));
+			}else{
+				curObj.m_animation.updateDelay(3);
+				walkSpeed = 50;
+			}
+			
 			curObj.m_isWalking = curObj.m_animationName == "walk" ? true : false;
             if (((curObj.m_left) && (!(curObj.m_right))))
             {
-				curObj.m_vx = curObj.m_vx - (curObj.m_vx > -curObj.m_XSpeed ? curObj.AccelRate : 0) 
-				curObj.m_vx = curObj.m_vx < -curObj.m_XSpeed ? -curObj.m_XSpeed : curObj.m_vx;
+				if(curObj.m_button2){
+					curObj.m_vx = curObj.m_vx - (curObj.m_vx > -curObj.m_XSpeed * 2 ? curObj.AccelRate : 0)
+					curObj.m_vx = curObj.m_vx < -curObj.m_XSpeed * 2 ? -curObj.m_XSpeed * 2 : curObj.m_vx;
+				}else{
+					curObj.m_vx = curObj.m_vx - (curObj.m_vx > -curObj.m_XSpeed ? curObj.AccelRate : 0)
+					curObj.m_vx = curObj.m_vx < -curObj.m_XSpeed ? -curObj.m_XSpeed : curObj.m_vx;
+				}
 				if (curObj.m_onGround)
 				{
 					curObj.m_animationName = curObj.m_vx > 0 ? "turn" : "walk";
@@ -61,8 +75,13 @@
             }
             if (((curObj.m_right) && (!(curObj.m_left))))
             {
-				curObj.m_vx = curObj.m_vx + (curObj.m_vx < curObj.m_XSpeed ? curObj.AccelRate : 0)
-				curObj.m_vx = curObj.m_vx > curObj.m_XSpeed ? curObj.m_XSpeed : curObj.m_vx;
+				if (curObj.m_button2){
+					curObj.m_vx = curObj.m_vx + (curObj.m_vx < curObj.m_XSpeed * 2 ? curObj.AccelRate : 0)
+					curObj.m_vx = curObj.m_vx > curObj.m_XSpeed * 2 ? curObj.m_XSpeed * 2 : curObj.m_vx;
+				}else{
+					curObj.m_vx = curObj.m_vx + (curObj.m_vx < curObj.m_XSpeed ? curObj.AccelRate : 0)
+					curObj.m_vx = curObj.m_vx > curObj.m_XSpeed ? curObj.m_XSpeed : curObj.m_vx;
+				}
 				if (curObj.m_onGround)
 				{
 					curObj.m_animationName = curObj.m_vx < 0 ? "turn" : "walk";

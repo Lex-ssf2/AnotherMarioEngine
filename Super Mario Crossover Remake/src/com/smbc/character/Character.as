@@ -6,6 +6,7 @@ package com.smbc.character
 	import com.smbc.controller.CharacterData;
 	import com.smbc.controller.PlayerSetting;
 	import com.smbc.engine.Level;
+	import com.smbc.projectiles.Projectile;
 	import com.smbc.tiles.Block;
 	import com.smbc.utils.Controller;
 	import flash.display.Bitmap;
@@ -18,7 +19,8 @@ package com.smbc.character
 	import com.smbc.engine.interactiveSprite;
 	import fl.transitions.Tween;
 	import fl.transitions.easing.*;
-	import com.smbc.utils.saveData;
+	import com.smbc.utils.*;
+	
 	/**
 	 * ...
 	 * @author Josned
@@ -28,16 +30,15 @@ package com.smbc.character
 		private var key:KeyObject;
 		public var m_isWalking:Boolean = false;
 		public var m_pressJump:Boolean = false;
-		public var m_coyoteTime:int = 3;
-		public var m_coyoteCount:int = 0;
 		public var m_jumpBuffer:int = 0;
 		public var m_jumpBufferMax:int = 6;
 		public var m_right:Boolean = false;
 		public var m_left:Boolean = false;
 		public var m_up:Boolean = false;
 		public var m_down:Boolean = false;
+		public var m_button1:Boolean = false;
+		public var m_button2:Boolean = false;
 		public var m_hitEnemy:Boolean = false;
-		public var m_entityNum:int = 4;
 		public var m_transformAnim:int = 0;
 		public var m_state:int = 0;
 		public var m_invincibleFrames:int;
@@ -58,6 +59,7 @@ package com.smbc.character
 		
 		public function Character(characterData:CharacterData = null,characterSettings:PlayerSetting = null) 
 		{
+			m_entityNum = EntityTypes.Characters;
 			super();
 			if (characterData == null) m_classID = MarioSkins;
 			else {
@@ -78,6 +80,7 @@ package com.smbc.character
 		
 		override protected function init(e:Event):void 
 		{
+			var i:int;
 			super.init(e);
 			//Mario Base
 			m_currentSheet = new SpriteSheetLoader(m_classID.getBitmap(m_currentSkin), m_classID.images[m_currentSkin].BMwidth, m_classID.images[m_currentSkin].BMheight, m_classID.images[m_currentSkin].Xsprites, m_classID.images[m_currentSkin].Ysprites);
@@ -101,7 +104,12 @@ package com.smbc.character
 			update();
 			m_animation.animation.x = m_classID.images[m_currentSkin].m_coords.x;
 			m_animation.animation.y = m_classID.images[m_currentSkin].m_coords.y;
-			if(LEVELDATA != null) m_characterID = LEVELDATA.m_CharacterList.indexOf(this);
+			if (LEVELDATA != null) m_characterID = LEVELDATA.CHARACTERS.indexOf(this);
+			while (i < maxProjectiles)
+            {
+                m_projectiles[i] = null;
+                i++;
+            };
 		}
 		
 		override public function update():void
@@ -271,6 +279,8 @@ package com.smbc.character
 				m_down = false;
 				m_right = false;
 				m_left = false;
+				m_button1 = false;
+				m_button2 = false;
 				return;
 			}
 			if (m_key.IsDown(m_key.m_left)){
@@ -289,19 +299,97 @@ package com.smbc.character
 			if (m_key.IsDown(m_key.m_up)){
 				m_up = true;
 				m_down = false;
-			}else {
+			}else if (m_key.IsDown(m_key.m_down)){
+				m_down = true;
 				m_up = false;
+			}		
+			else {
 				m_down = false;
+				m_up = false;
+			}
+			if (m_key.IsDown(m_key.m_button1)){
+				m_button1 = true;
+			}else {
+				m_button1 = false;
+			}
+			if (m_key.IsDown(m_key.m_button2)){
+				m_button2 = true;
+			}else {
+				m_button2 = false;
 			}
 		}
 		
 		protected function characterMove():void
 		{
+			/*if (m_button2)
+			{
+				if (!m_firedProjectile) fireProjectile();
+				m_firedProjectile = true;
+			}
+			else 
+			{
+				m_firedProjectile = false;
+			}*/
+			if(m_down)
+			{
+				if(m_canSlide != 0 && getOnGround()){
+					m_vx += m_canSlide;
+					m_vx *= 1.25;
+				}
+				if(m_vx != 0)
+					m_animationName = "slide";
+			}
 			if (m_MoveFunction != null)
 			{
 				m_MoveFunction(this);
 			}
 			return;
+		}
+		
+		public function fireProjectile():Projectile	//proj:*, xOverride:Number=0, yOverride:Number=0, absolute:Boolean=false, options:Object=null
+        {
+			/*	"owner":this,
+				"player_id":m_player_id,
+				"x_start":m_sprite.x,
+				"y_start":m_sprite.y,
+				"sizeRatio":m_sizeRatio,
+				"facingForward":m_facingForward,
+				"chargetime":((options.chargetime) || (m_attack.ChargeTime)),
+				"chargetime_max":((options.chargetime_max) || (m_attack.ChargeTimeMax)),
+				"frame":(n.StatsName + "_proj"),
+				"staleMultiplier":this.totalMoveDecay((n.StatsName + "_proj")),
+				"sizeStatus":this.m_sizeStatus,
+				"terrains":m_terrains,
+				"platforms":m_platforms,
+				"team_id":m_team_id,
+				"volume_sfx":this.m_characterStats.VolumeSFX,
+				"volume_vfx":this.m_characterStats.VolumeVFX
+			}, n, STAGEDATA
+			*/
+			var i:int = 0;
+			for (i = 0; i < maxProjectiles; i++) 
+			{
+				if (m_projectiles[i] != null && !m_projectiles[i].m_isDead)
+				{
+					if (i != maxProjectiles - 1)
+					{
+						continue;
+					}
+					LEVELDATA.removeProjectile(LEVELDATA.PROJECTILES.indexOf(m_projectiles[0]));
+					m_projectiles.shift();
+				}
+					m_projectiles[i] = new Projectile({
+					"owner":this,
+					"player_id":m_player,
+					"x_start":x,
+					"y_start":y,
+					"scaleRatio":m_currentScale,
+					"facingRight":m_facingRight,
+					"team_id":m_player
+				});
+				break;
+			}
+			return m_projectiles[Math.min(i,m_projectiles.length - 1)];
 		}
 		
 		public function getControllerNum(cnum:int):Controller
@@ -313,19 +401,75 @@ package com.smbc.character
             return saveData.controllers[cnum] as Controller;
         }
 		
+		override public function SetCollisionNum(num:uint):void
+		{
+			m_CollisionNum = num;
+			if (!m_onGround && (m_CollisionNum == 4 || m_CollisionNum == 8))
+			{
+				//tracePared(m_CollisionNum)
+			}
+		}
+		
+		public function tracePared(collision:int):void 
+		{
+			if (collision == 8 && m_facingRight || collision == 4 && !m_facingRight)
+			{
+				trace("XD");
+				return;
+			}
+			m_vx = 0;
+			m_vy = 0;
+			switch (collision) 
+			{
+				case 4:
+					m_vx = 1;
+					if (m_right == false)
+					{
+						m_vx = -0.5;
+						return;
+					}
+					if (m_button1)
+					{
+						setxSpeed( -(m_XSpeed * 1.5));
+						setySpeed( -m_jumpSpeed * 2);
+					}
+				break;
+				case 8:
+				m_vx = -1;
+					if (m_left == false)
+					{
+						m_vx = 0.5;
+						return;
+					}
+					if (m_button1)
+					{
+						setxSpeed(m_XSpeed * 1.5);
+						setySpeed( -m_jumpSpeed * 2);
+					}
+				break;
+				default:
+			}
+			if (m_up)
+			{
+				setySpeed(-2);
+				return;
+			}			
+			if (m_down)
+			{
+				setySpeed(2);
+				return;
+			}
+		}
+		
 		override protected function checkGround():void 
 		{
 			m_vy += m_gravity;
-			if (y <= m_floor) 
-			{
-				m_coyoteCount = 0;
-				return;
-			}
 			if (m_coyoteCount < m_coyoteTime && m_onGround)
 			{
 				m_coyoteCount++;
 			}
 			else {
+				m_coyoteCount = 0;
 				m_onGround = false;
 				m_isWalking = false;
 			}

@@ -3,7 +3,9 @@ package com.smbc.engine
 	import com.senocular.utils.KeyObject;
 	import com.smbc.bmd.SpriteSheetAnimation;
 	import com.smbc.bmd.SpriteSheetLoader;
-	import com.smbc.tiles.Block;
+	import com.smbc.character.Character;
+	import com.smbc.projectiles.Projectile;
+	import com.smbc.tiles.*;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import com.smbc.controller.GameController;
@@ -36,6 +38,8 @@ package com.smbc.engine
 		public var m_facingRight:Boolean = true;
 		public var m_isDead:Boolean = false;
 		public var m_ignoreTerrain:Boolean = false;
+		public var m_firedProjectile:Boolean = false;
+		public var m_canSlide:int = 0;
 		public var m_type:int = 0;
 		public var m_PosX:int = 0;
 		public var m_PosY:int = 0;
@@ -43,9 +47,15 @@ package com.smbc.engine
 		public var mapY:int = -1;
 		public var m_animationName:String = "idle";
 		public var m_frontBlock:*;
+		public var m_actualBlock:*;
 		public var DecelRate:Number = 0;
 		public var AccelRate:Number = 0;
 		public var minimunXSpeed:Number = 0;
+		public var maxProjectiles:int = 10;
+		public var m_projectiles:Vector.<Projectile> = new Vector.<Projectile>();
+		public var m_coyoteTime:int = 4;
+		public var m_coyoteCount:int = 0;
+		public var m_entityNum:int = 0;
 		
 		public function interactiveSprite() 
 		{
@@ -130,6 +140,8 @@ package com.smbc.engine
 		public function setySpeed(speed:Number):void
 		{
 			m_vy = speed
+			if (speed < 0 && getOnGround())
+				pushOutOfGround();
 		}		
 		
 		public function getxSpeed():Number
@@ -189,72 +201,128 @@ package com.smbc.engine
 			return;
 		}
 		
-		public function hitBlock(currentBlock:*):void
+		public function pushOutOfGround():void
+        {
+            var max:int = 50;
+            var i:int;
+			m_onGround = false;
+            while (i < max && m_actualBlock.m_collision.hitTestPoint(x,y + m_collision.height/2,true))
+            {
+                y--;
+                i++;
+            };
+            if (i >= max)
+            {
+                y += i;
+            };
+			m_onGround = false;
+        }
+		
+		public function hitBlock(currentBlock:*,overlap:int = 0):void
 		{
 			if (m_ignoreTerrain) {
 				SetCollisionNum(0);
 				return;
 			}
-			if (y + m_collision.height/2 + Math.min(m_gravity + m_jumpSpeed,m_vy) >= currentBlock.y - currentBlock.m_collision.height/2)
+			if (m_isJumping)
+				setOnGround(false);
+			var j:Number = 0;
+			var i:int = 0;
+			//Se pega al piso
+			if (getOnGround()){
+				i = y + 8;
+				while (y < i && !currentBlock.m_collision.hitTestPoint(x,y + m_collision.height/2,true))
+				{
+					y = y + 1;
+				};
+				if (!currentBlock.m_collision.hitTestPoint(x,y + m_collision.height/2,true))
+				{
+					y = (i - 8);
+				};
+				while (currentBlock.m_collision.hitTestPoint(x,y + m_collision.height/2 - 1,true))
+				{
+					//Que subas el piso despues de estar dentro
+					j = 0;
+					while (currentBlock.m_collision.hitTestPoint(x,y + m_collision.height/2 ,true) && (j < 150))
+					{
+						y -= 1;
+						j += 1;
+					};
+					y += j - 1;
+				}
+			}
+			if (y + m_collision.height/2 + Math.min(m_gravity + m_jumpSpeed,m_vy) > currentBlock.y - currentBlock.m_collision.height/2)
 			{
-				if (m_facingRight)
+				//Encuentra el bloque de al frente
+				if (currentBlock.m_collision.hitTestPoint(x + m_collision.width + 1, y + m_collision.height / 2 + Math.max(getySpeed(), 1), true) && m_facingRight 
+				|| currentBlock.m_collision.hitTestPoint(x - m_collision.width - 1,y + m_collision.height/2 + Math.max(getySpeed(),1),true) && !m_facingRight)
+					m_frontBlock = currentBlock;
+					
+				if (currentBlock.m_collision.hitTestPoint(x,y + m_collision.height/2 ,true ))
 				{
-					if (currentBlock.m_collision.hitTestPoint(x + m_collision.width + 1,y + m_collision.height/2 + Math.max(getySpeed(),1)))
+					//Subir mientras estes atravesando el piso
+					while (currentBlock.m_collision.hitTestPoint(x,y + m_collision.height/2,true) && !getOnGround()) 
 					{
-						m_frontBlock = currentBlock;
+						y -= 1;
 					}
-				}
-				else 
-				{
-					if (currentBlock.m_collision.hitTestPoint(x - m_collision.width - 1,y + m_collision.height/2 + Math.max(getySpeed(),1)))
-					{
-						m_frontBlock = currentBlock;
-					}
-				}
-				
-				if (currentBlock.m_collision.hitTestPoint(x,y + m_collision.height/2 + Math.min(m_gravity + m_jumpSpeed,m_vy)))
-				{
+					m_coyoteCount = 0;
+					m_actualBlock = currentBlock;
+					//Accion cuando le pegan al bloque y estas encima
 					if (currentBlock is Block && currentBlock.m_gotHit) {
 						blockIteration(currentBlock);
 						SetCollisionNum(1);
 						return;
 					}
-					y = currentBlock.y - currentBlock.m_collision.height / 2 - m_collision.height / 2;
+					if(!getJumping() && this is Character)
+					{
+						if(currentBlock is Slopes)
+							this.m_canSlide = (currentBlock.m_type > 3) ? 1 : -1;
+						else
+							this.m_canSlide = 0;
+					}
+					if (getOnGround() == false && this is Character)
+					{
+						//Function for touching Grass
+					}
+					setJumping(false);
 					setOnGround(true);
-					setFloor(currentBlock.y - currentBlock.m_collision.height/2 - m_collision.height / 2);
 					if (!getJumping()) setySpeed(0);
 					SetCollisionNum(1);
 					return;
 				}
+				
 			}
-
-
-			if (currentBlock.m_collision.hitTestPoint(x,y - m_collision.height/2) && y > currentBlock.y +currentBlock.m_collision.height/2)
+			if (currentBlock.m_collision.hitTestPoint(x,y - m_collision.height/2,true) && y > currentBlock.y +currentBlock.m_collision.height/2)
 			{
-				y = currentBlock.y + currentBlock.m_collision.height / 2 + m_collision.height / 2;
-				if (getOnGround()) return;
-				if (currentBlock.m_hitable && !getOnGround())
+				setySpeed(0);
+				if (currentBlock.m_hitable)
 				{
 					currentBlock.blockIteration(this);
 				}
-				setySpeed(4);
+				setySpeed(m_gravity * 1.5);
 				setJumping(false);
 				SetCollisionNum(2);
 				return;
 			}
-			if (currentBlock.m_collision.hitTestPoint(x + m_collision.width / 2, y))
+			m_frontBlock = null;
+			while ((currentBlock.m_collision.hitTestPoint(x + getxSpeed() + overlap/2, y, true) && currentBlock.m_collisionCheck[0] == 1
+			|| currentBlock.m_collision.hitTestPoint(x + getxSpeed() - overlap/2, y, true) && currentBlock.m_collisionCheck[1] == 1
+			|| currentBlock.m_collision.hitTestPoint(x + getxSpeed() + overlap/2, y - m_collision.height/2 + overlap, true) && currentBlock.m_collisionCheck[0] == 1
+			|| currentBlock.m_collision.hitTestPoint(x + getxSpeed() - overlap/2, y - m_collision.height/2 + overlap, true) && currentBlock.m_collisionCheck[1] == 1
+			) && ((getOnGround() && currentBlock.y - currentBlock.m_collision.height/2 <= y - m_collision.height/2) || !getOnGround()))
 			{
-				x = currentBlock.x - currentBlock.width / 2 - m_collision.width / 2;
-				SetCollisionNum(4);
-				m_frontBlock = null;
-				return;
-			}
-			if (currentBlock.m_collision.hitTestPoint(x - m_collision.width / 2, y))
-			{
-				x = currentBlock.x + currentBlock.width / 2 + m_collision.width / 2;
-				SetCollisionNum(8);
-				m_frontBlock = null;
-				return;
+				//Colision con pared;
+				setxSpeed(0);
+				SetCollisionNum(m_facingRight ? 4 : 8);
+				while (currentBlock.m_collision.hitTestPoint(x, y, true) 
+				|| currentBlock.m_collision.hitTestPoint(x, y, true))
+				{
+					if (currentBlock.x <= x)
+						x++;
+					else
+						x--;
+					return;
+				}
 			}
 			SetCollisionNum(0);
 			return;

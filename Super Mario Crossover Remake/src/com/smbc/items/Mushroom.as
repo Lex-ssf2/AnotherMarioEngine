@@ -8,6 +8,7 @@ package com.smbc.items
 	import com.smbc.bmd.*;
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import com.smbc.utils.EntityTypes;
 	
 	/**
 	 * ...
@@ -15,11 +16,11 @@ package com.smbc.items
 	 */
 	public class Mushroom extends interactiveSprite 
 	{
-		public var m_entityNum:int = 5;
 		public var m_state:int = 1;
 		
 		public function Mushroom() 
 		{
+			m_entityNum = EntityTypes.PowerUps;
 			super();
 		}
 		
@@ -50,9 +51,9 @@ package com.smbc.items
 				m_ignoreTerrain = false;
 			};
 			m_vx = m_facingRight ? m_XSpeed : -m_XSpeed;
-			for (var i:int = 0; i < LEVELDATA.m_CharacterList.length; i++) 
+			for (var i:int = 0; i < LEVELDATA.CHARACTERS.length; i++) 
 			{
-				hitObj(LEVELDATA.m_CharacterList[i]);
+				hitObj(LEVELDATA.CHARACTERS[i]);
 			}
 		}
 		

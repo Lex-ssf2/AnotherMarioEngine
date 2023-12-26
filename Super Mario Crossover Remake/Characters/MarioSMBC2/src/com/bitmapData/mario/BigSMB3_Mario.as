@@ -14,6 +14,7 @@ package com.bitmapData.mario
 		public static const jump:Array = [4];
 		public static const turn:Array = [9];
 		public static const dead:Array = [31];
+		public static const slide:Array = [16];
 		public static const ogPalette:Array = [0xFF29587c, 0xFF4491be, 0xFFb23226, 0xFFfecec7,0xFF000000];
 		public static const regular:Array = [0, 0, 0xFFb23226, 0xFFfecec7,0xFF000000];
 		public static const fire:Array = [0, 0, 0xFFe89d34, 0xFFfecec7, 0xFFb23226];

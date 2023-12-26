@@ -3,17 +3,18 @@ package com.smbc.engine
 	import com.smbc.bmd.SpriteSheetLoader;
 	import com.smbc.engine.Level;
 	import com.smbc.bmd.*;
+	import com.smbc.utils.EntityTypes;
 	import com.smbc.tiles.Block;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	
 	public class Goomba extends interactiveSprite 
 	{
-		public var m_entityNum:int = 2;
 		public var m_deadTimer:int = 30;
 		
 		public function Goomba() 
 		{
+			m_entityNum = EntityTypes.Enemies;
 			super();
 		}
 		
@@ -30,7 +31,7 @@ package com.smbc.engine
 			addChild(m_collision); //Divi DCD
 			addChild(m_animation);
 			m_XSpeed = 1;
-			if (LEVELDATA != null && LEVELDATA.m_CharacterList[0].x > x)
+			if (LEVELDATA != null && LEVELDATA.CHARACTERS[0].x > x)
 			{
 				m_facingRight = true;
 			}
@@ -45,6 +46,7 @@ package com.smbc.engine
 		{
 			super.update();
 			state();
+			if (m_animation == null) return;
 			m_animation.performAll();
 			if (LEVELDATA == null) return;
 			if (m_isDead) {
@@ -57,9 +59,9 @@ package com.smbc.engine
 				return;
 			}
 			m_vx = m_facingRight ? m_XSpeed : -m_XSpeed;
-			for (var i:int = 0; i < LEVELDATA.m_CharacterList.length; i++) 
+			for (var i:int = 0; i < LEVELDATA.CHARACTERS.length; i++) 
 			{
-				hitObj(LEVELDATA.m_CharacterList[i])
+				hitObj(LEVELDATA.CHARACTERS[i])
 			}			
 			for (i = 0; i < LEVELDATA.m_EnemiesList.length; i++) 
 			{
@@ -85,6 +87,7 @@ package com.smbc.engine
 		
 		public function state():void 
 		{
+			if (m_animation == null) return;
 			if (m_isDead)
 			{
 				m_animation.setCurrentFrame(2);
@@ -97,14 +100,14 @@ package com.smbc.engine
 		
 		public function hitEnemy(objClass:*, overlap:Number = 4):uint
 		{
-			if (objClass.m_isDead) return NaN;
+			if (objClass.m_isDead || objClass.m_collision == null) return NaN;
 			if (this.hitTestPoint(objClass.x + objClass.m_collision.width / 2, objClass.y) && !m_facingRight|| this.hitTestPoint(objClass.x - objClass.m_collision.width / 2, objClass.y) && m_facingRight || this.hitTestPoint(objClass.x, objClass.y - height / 2))
 			{
 				m_facingRight = m_facingRight ? false : true;
 				return 0;
 			}
 			return NaN;
-		}		
+		}
 		
 		public function hitObj(objClass:*, overlap:Number = 4):uint
 		{
@@ -135,7 +138,7 @@ package com.smbc.engine
 		override public function SetCollisionNum(num:uint):void
 		{
 			m_CollisionNum = num;
-			switch (m_CollisionNum) 
+			switch (m_CollisionNum)
 			{
 				case 4:
 					m_facingRight = false;

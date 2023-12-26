@@ -13,6 +13,7 @@ package com.smbc.tiles
 	import fl.transitions.Tween;
 	import fl.transitions.easing.*;
 	import com.smbc.controller.GameController;
+	import com.smbc.utils.*;
 	/**
 	 * ...
 	 * @author Josned
@@ -21,7 +22,6 @@ package com.smbc.tiles
 	{
 		public var m_animation:SpriteSheetAnimation;
 		public var m_type:int = 0;
-		public var m_entityNum:int = 1;
 		public var m_PosX:int = 0;
 		public var m_PosY:int = 0;
 		public var m_nextType:int = 0;
@@ -38,10 +38,13 @@ package com.smbc.tiles
 		public var LEVELDATA:Level;
 		public var m_particlesArray:Array;
 		public var m_Item:int = 0;
+		public var m_entityNum:int = 0;
 		public var m_ItemSprite:Mushroom = null;
+		public var m_collisionCheck:Array = [1,1];
 		
 		public function Block()
 		{
+			m_entityNum = EntityTypes.Blocks;
 			LEVELDATA = GameController.currentLevel;
 			addEventListener(Event.ADDED_TO_STAGE, init);
 		}
@@ -50,7 +53,8 @@ package com.smbc.tiles
 		{
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			if (m_collision == null) m_collision = new Sprite();
-			m_collision.graphics.beginFill(0, 1);
+			m_collision.graphics.beginFill(0xff0000, 1);
+			//m_collision.graphics.drawTriangles(Vector.<Number>([ -8, 8, 8, 8, 8, -8]))
 			m_collision.graphics.drawRect(-(16) /2 ,-(16)/2 , 16 , 16);
 			m_collision.graphics.endFill();
 			addChild(m_collision);

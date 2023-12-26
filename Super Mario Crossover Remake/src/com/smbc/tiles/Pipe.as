@@ -4,6 +4,7 @@ package com.smbc.tiles
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.geom.Point;
+	import com.smbc.utils.EntityTypes;
 	/**
 	 * ...
 	 * @author Josned
@@ -17,7 +18,7 @@ package com.smbc.tiles
 		public function Pipe() 
 		{
 			super();
-			m_entityNum = 3;
+			m_entityNum = EntityTypes.DynamicBlocks;
 		}
 		
 		override protected function init(e:Event):void 

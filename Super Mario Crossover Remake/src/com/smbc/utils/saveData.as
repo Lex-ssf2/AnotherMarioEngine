@@ -25,8 +25,8 @@ package com.smbc.utils
 			var i:int = 0;
 			saveData.controllers = new Vector.<Controller>();
 			loadGame();
-			//m_localObject = new Object();
-			if (m_sharedObject.data.savedata == undefined || !(m_sharedObject.data.savedata is Object))
+			m_localObject = new Object();
+			/*if (m_sharedObject.data.savedata == undefined || !(m_sharedObject.data.savedata is Object))
             {
                 m_localObject = new Object();
 				trace("huh");
@@ -43,7 +43,7 @@ package com.smbc.utils
                     m_localObject = new Object();
                     corrupted = true;
                 };
-            };
+            };*/
 			if ((((m_localObject.game == undefined) || (m_localObject.game.exists == undefined)) || (m_localObject.game.exists == false)))
             {
 				m_localObject.game = {
@@ -60,7 +60,9 @@ package com.smbc.utils
 								"UP":Keyboard.UP,
 								"DOWN":Keyboard.DOWN,
 								"LEFT":Keyboard.LEFT,
-								"RIGHT":Keyboard.RIGHT
+								"RIGHT":Keyboard.RIGHT,
+								"BUTTON1":Keyboard.NUMPAD_2,
+								"BUTTON2":Keyboard.NUMPAD_3
 							}));
 						break;
 						case 1:
@@ -68,7 +70,9 @@ package com.smbc.utils
 								"UP":Keyboard.W,
 								"DOWN":Keyboard.S,
 								"LEFT":Keyboard.A,
-								"RIGHT":Keyboard.D
+								"RIGHT":Keyboard.D,
+								"BUTTON1":Keyboard.O,
+								"BUTTON2":Keyboard.P
 							}));
 						break;
 						default:
@@ -76,7 +80,9 @@ package com.smbc.utils
 								"UP":0,
 								"DOWN":0,
 								"LEFT":0,
-								"RIGHT":0
+								"RIGHT":0,
+								"BUTTON1":0,
+								"BUTTON2":0
 							}));
 						break;
 					}
@@ -92,7 +98,9 @@ package com.smbc.utils
 						"UP":0,
 						"DOWN":0,
 						"LEFT":0,
-						"RIGHT":0
+						"RIGHT":0,
+						"BUTTON1":0,
+						"BUTTON2":0
 					}));
 					if (m_localObject.game.controlSettings["player" + i])
 					{

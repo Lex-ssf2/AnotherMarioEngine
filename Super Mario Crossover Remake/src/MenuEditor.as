@@ -17,6 +17,7 @@ package
 	import flash.net.FileReference;
 	import flash.system.System;
 	import com.smbc.controller.GameController;
+	import com.smbc.utils.EntityTypes;
 	
 	/**
 	 * ...
@@ -64,7 +65,7 @@ package
 			scroller.y = 16 * 17;
 			removeEventListener(Event.ADDED_TO_STAGE, init);
 			m_buttonEditorVector.push(new BlockButton(), new EnemiesButton(), new ItemsButton(), new Eraser(), new Play(), new Save(), new Load());
-			m_buttonBlockVector.push(new Terrain() , new BPipe(), new QBlock(), new TBlock(), new BBlock());
+			m_buttonBlockVector.push(new Terrain() , new BPipe(), new QBlock(), new TBlock(), new BBlock(), new DiagonalOne, new DiagonalTwo, new DiagonalTres, new MDiagonalOne, new MDiagonalTwo, new MDiagonalTres);
 			m_buttonEnemiesVector.push(new BGoomba(), new BStartPoint());
 			m_buttonItemsVector.push(new BMushroom(), new BFireFlower());
 			for (var i:int = 0; i < m_buttonEditorVector.length; i++) 
@@ -356,13 +357,13 @@ package
 					m_levelData[m_levelEditor.getTiles()[i].m_PosY][m_levelEditor.getTiles()[i].m_PosX][1] = m_levelEditor.getTiles()[i].m_type;
 					switch (m_levelData[m_levelEditor.getTiles()[i].m_PosY][m_levelEditor.getTiles()[i].m_PosX][0]) 
 					{
-						case 3:
+						case EntityTypes.DynamicBlocks:
 							m_levelData[m_levelEditor.getTiles()[i].m_PosY][m_levelEditor.getTiles()[i].m_PosX][2] = m_levelEditor.getTiles()[i].size;
 						break;
-						case 1:
+						case EntityTypes.Blocks:
 							m_levelData[m_levelEditor.getTiles()[i].m_PosY][m_levelEditor.getTiles()[i].m_PosX][2] = m_levelEditor.getTiles()[i].m_Item;
 						break;
-						case 4:
+						case EntityTypes.Characters:
 							Main.Root.m_currentStartPoint.x = m_levelEditor.getTiles()[i].m_PosX * 16;
 							Main.Root.m_currentStartPoint.y = m_levelEditor.getTiles()[i].m_PosY * 16;
 						break;

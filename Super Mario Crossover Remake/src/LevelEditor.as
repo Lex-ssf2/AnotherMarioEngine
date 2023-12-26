@@ -5,6 +5,7 @@ package
 	import com.smbc.items.Mushroom;
 	import com.smbc.tiles.Block;
 	import com.smbc.tiles.Pipe;
+	import com.smbc.tiles.Slopes;
 	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
@@ -16,6 +17,7 @@ package
 	import flash.events.SoftKeyboardEvent;
 	import flash.geom.Point;
 	import com.senocular.utils.KeyObject;
+	import com.smbc.utils.EntityTypes;
 	
 	public class LevelEditor extends Sprite 
 	{
@@ -101,74 +103,47 @@ package
 			{
 				for (var j:int = 0; j < m_loadedLevel[i].length; j++) 
 				{
-					if (!m_loadedLevel[i] || !m_loadedLevel[i][j]) continue;
-					if (m_loadedLevel[i][j][0] == 1)
+					if (!m_loadedLevel[i] || !m_loadedLevel[i][j] || m_loadedLevel[i][j][0] < 1) continue;
+					switch (m_loadedLevel[i][j][0]) 
 					{
-						m_tiles.push(new Block);
-						m_tiles[m_tiles.length - 1].m_type = m_loadedLevel[i][j][1];
+						case EntityTypes.Blocks:
+							m_tiles.push(new Block);
+						break;						
+						case EntityTypes.Enemies:
+							m_tiles.push(new Goomba());
+						break;					
+						case EntityTypes.DynamicBlocks:
+							m_tiles.push(new Pipe());
+							m_tiles[m_tiles.length - 1].size = m_loadedLevel[i][j][2];
+						break;						
+						case EntityTypes.Characters:
+							m_tiles.push(new Character());
+							m_currentStartPoint = (m_tiles.length - 1);
+						break;
+						case EntityTypes.PowerUps:
+							m_tiles.push(new Mushroom());
+						break;
+						case EntityTypes.Slopes:
+							m_tiles.push(new Slopes());
+						break;
+						default:
+					}
+					m_tiles[m_tiles.length - 1].m_type = m_loadedLevel[i][j][1];
+					m_tiles[m_tiles.length - 1].m_entityNum = m_loadedLevel[i][j][0];
+					m_tiles[m_tiles.length - 1].m_PosX = j
+					m_tiles[m_tiles.length - 1].m_PosY = i;
+					m_tileContainer.addChild(m_tiles[m_tiles.length - 1]);
+					if (m_loadedLevel[i][j][0] == EntityTypes.Blocks)
+					{
 						m_tiles[m_tiles.length - 1].m_Item = m_loadedLevel[i][j][2];
-						m_tiles[m_tiles.length - 1].m_entityNum = m_loadedLevel[i][j][0];
-						m_tiles[m_tiles.length - 1].m_PosX = j
-						m_tiles[m_tiles.length - 1].m_PosY = i;
-						m_tileContainer.addChild(m_tiles[m_tiles.length - 1]);
 						if (m_tiles[m_tiles.length - 1].m_Item > 0)
 						{
 							m_tiles[m_tiles.length - 1].updatePowerUp(new Mushroom(), m_tiles[m_tiles.length - 1].m_Item);
 						}
-						m_tiles[m_tiles.length - 1].x = m_grid.x + m_tiles[m_tiles.length - 1].m_PosX * 16 + m_tiles[m_tiles.length - 1].width/2;
-						m_tiles[m_tiles.length - 1].y = m_grid.y + m_tiles[m_tiles.length - 1].m_PosY * 16 + m_tiles[m_tiles.length - 1].height / 2;
-						continue;
-					}					
-					if (m_loadedLevel[i][j][0] == 2)
-					{
-						m_tiles.push(new Goomba());
-						m_tiles[m_tiles.length - 1].m_type = m_loadedLevel[i][j][1];
-						m_tiles[m_tiles.length - 1].m_entityNum = m_loadedLevel[i][j][0];
-						m_tiles[m_tiles.length - 1].m_PosX = j
-						m_tiles[m_tiles.length - 1].m_PosY = i;
-						m_tileContainer.addChild(m_tiles[m_tiles.length - 1]);
-						m_tiles[m_tiles.length - 1].x = m_grid.x + m_tiles[m_tiles.length - 1].m_PosX * 16 + m_tiles[m_tiles.length - 1].width/2;
-						m_tiles[m_tiles.length - 1].y = m_grid.y + m_tiles[m_tiles.length - 1].m_PosY * 16 + m_tiles[m_tiles.length - 1].height / 2;
-						continue;
-					}					
-					if (m_loadedLevel[i][j][0] == 3)
-					{
-						m_tiles.push(new Pipe());
-						m_tiles[m_tiles.length - 1].m_type = m_loadedLevel[i][j][1];
-						m_tiles[m_tiles.length - 1].m_entityNum = m_loadedLevel[i][j][0];
-						m_tiles[m_tiles.length - 1].size = m_loadedLevel[i][j][2];
-						m_tiles[m_tiles.length - 1].m_PosX = j
-						m_tiles[m_tiles.length - 1].m_PosY = i;
-						m_tileContainer.addChild(m_tiles[m_tiles.length - 1]);
-						m_tiles[m_tiles.length - 1].x = m_grid.x + m_tiles[m_tiles.length - 1].m_PosX * 16 + m_tiles[m_tiles.length - 1].width/2;
-						m_tiles[m_tiles.length - 1].y = m_grid.y + m_tiles[m_tiles.length - 1].m_PosY * 16 + m_tiles[m_tiles.length - 1].height / 2;
-						continue;
 					}
-					if (m_loadedLevel[i][j][0] == 4)
-					{
-						m_tiles.push(new Character());
-						m_currentStartPoint = (m_tiles.length - 1);
-						m_tiles[m_tiles.length - 1].m_type = m_loadedLevel[i][j][1];
-						m_tiles[m_tiles.length - 1].m_entityNum = m_loadedLevel[i][j][0];
-						m_tiles[m_tiles.length - 1].m_PosX = j
-						m_tiles[m_tiles.length - 1].m_PosY = i;
-						m_tileContainer.addChild(m_tiles[m_tiles.length - 1]);
-						m_tiles[m_tiles.length - 1].x = m_grid.x + m_tiles[m_tiles.length - 1].m_PosX * 16 + m_tiles[m_tiles.length - 1].width/2;
-						m_tiles[m_tiles.length - 1].y = m_grid.y + m_tiles[m_tiles.length - 1].m_PosY * 16 + m_tiles[m_tiles.length - 1].height / 2;
-						continue;
-					}
-					if (m_loadedLevel[i][j][0] == 5)
-					{
-						m_tiles.push(new Mushroom());
-						m_tiles[m_tiles.length - 1].m_type = m_loadedLevel[i][j][1];
-						m_tiles[m_tiles.length - 1].m_entityNum = m_loadedLevel[i][j][0];
-						m_tiles[m_tiles.length - 1].m_PosX = j
-						m_tiles[m_tiles.length - 1].m_PosY = i;
-						m_tileContainer.addChild(m_tiles[m_tiles.length - 1]);
-						m_tiles[m_tiles.length - 1].x = m_grid.x + m_tiles[m_tiles.length - 1].m_PosX * 16 + m_tiles[m_tiles.length - 1].width/2;
-						m_tiles[m_tiles.length - 1].y = m_grid.y + m_tiles[m_tiles.length - 1].m_PosY * 16 + m_tiles[m_tiles.length - 1].height / 2;
-						continue;
-					}
+					m_tiles[m_tiles.length - 1].x = m_grid.x + m_tiles[m_tiles.length - 1].m_PosX * 16 + m_tiles[m_tiles.length - 1].width/2;
+					m_tiles[m_tiles.length - 1].y = m_grid.y + m_tiles[m_tiles.length - 1].m_PosY * 16 + m_tiles[m_tiles.length - 1].height / 2;
+					continue;
 				}
 			}
 		}
@@ -323,6 +298,9 @@ package
 						break;
 						case 6:
 						m_tiles.push(new Mushroom());
+						break;						
+						case 7:
+						m_tiles.push(new Slopes());
 						break;
 						default:
 					}

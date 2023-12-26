@@ -5,8 +5,10 @@ package com.smbc.engine
 	import com.smbc.controller.CharacterData;
 	import com.smbc.items.Mushroom;
 	import com.smbc.levelEditor.Buttons.Play;
+	import com.smbc.projectiles.Projectile;
 	import com.smbc.tiles.Block;
 	import com.smbc.tiles.Pipe;
+	import com.smbc.tiles.Slopes;
 	import com.smbc.utils.VcamMC;
 	import flash.display.MovieClip;
 	import flash.display.Sprite;
@@ -18,6 +20,7 @@ package com.smbc.engine
 	import flash.utils.getTimer;
 	import com.smbc.controller.GameController;
 	import com.smbc.controller.CharacterStats;
+	import com.smbc.utils.EntityTypes;
 	/**
 	 * ...
 	 * @author Josned
@@ -39,7 +42,8 @@ package com.smbc.engine
 		public var m_gameMode:int = 0;
 		
 		public var lastTime:int = getTimer();
-		public var m_CharacterList:Array = new Array();
+		public var CHARACTERS:Vector.<Character> = new Vector.<com.smbc.character.Character>();
+		public var PROJECTILES:Vector.<Projectile> = new Vector.<com.smbc.projectiles.Projectile>();
 		public var m_EnemiesList:Array = new Array();
 		public var m_ItemsList:Array = new Array();
 		public var m_gameObjectList:Array = new Array();
@@ -87,13 +91,13 @@ package com.smbc.engine
 		{
 			removeEventListener(Event.ENTER_FRAME, performAll);
 			m_vcam.removeListener();
-			for (var k:int = 0; k < m_CharacterList.length; k++) 
+			for (var k:int = 0; k < CHARACTERS.length; k++) 
 			{
-				if (!m_CharacterList[k]) continue;
-				m_CharacterList[k].removeListener();
-				m_CharacterList[k] = null;
+				if (!CHARACTERS[k]) continue;
+				CHARACTERS[k].removeListener();
+				CHARACTERS[k] = null;
 			}
-			m_CharacterList.splice(0, m_CharacterList.length);
+			CHARACTERS.splice(0, CHARACTERS.length);
 			for (k = 0; k < m_EnemiesList; k++) 
 			{
 				if (!m_EnemiesList[k]) continue;
@@ -163,7 +167,7 @@ package com.smbc.engine
 					if (m_map[i][j][0] == 0) continue;
 					switch (m_map[i][j][0]) 
 					{
-						case 2:
+						case EntityTypes.Enemies:
 							if (!enemyObjects[i] || !enemyObjects[i][j])
 							{
 								if(!enemyObjects[i]) enemyObjects[i] = new Array;
@@ -181,7 +185,7 @@ package com.smbc.engine
 							}
 							continue;
 						break;
-						case 5:
+						case EntityTypes.PowerUps:
 							if (!itemsObjects[i] || !itemsObjects[i][j])
 							{
 								if(!itemsObjects[i]) itemsObjects[i] = new Array;
@@ -200,7 +204,7 @@ package com.smbc.engine
 							}
 							continue;
 						break;					
-						case 3:
+						case EntityTypes.DynamicBlocks:
 								if (!gameObjects[i] || !gameObjects[i][j])
 								{
 									block = new Pipe();
@@ -220,7 +224,7 @@ package com.smbc.engine
 								};
 								continue;
 						break;
-						case 1:
+						case EntityTypes.Blocks:
 							if (!tileObjects[i] || !tileObjects[i][j])
 							{
 								if (tilePool.length > 0){
@@ -241,6 +245,26 @@ package com.smbc.engine
 									tileObjects[i] = new Array;
 								};
 								tileObjects[i][j] = block;
+							}
+							continue;
+						break;
+						case EntityTypes.Slopes:
+							if (!gameObjects[i] || !gameObjects[i][j])
+							{
+								block = new Slopes();
+								block.x = j * 16;
+								block.y = i * 16;
+								block.m_type = m_map[i][j][1];
+								block.m_Item = m_map[i][j][2];
+								block.m_PosX = j;
+								block.m_PosY = i;
+								addChild(block);
+								if (!gameObjects[i])
+								{
+									gameObjects[i] = new Array;
+								};
+								gameObjects[i][j] = block;
+								m_gameObjectList.push(block);
 							}
 							continue;
 						break;
@@ -294,15 +318,19 @@ package com.smbc.engine
 					if (m_map[i][j][0] == 0) continue;
 					if (!tileObjects[i] || !tileObjects[i][j]) continue;
 					
-					if (m_map[i][j][0] == 1 && m_map[Math.max(i - 1,0)][j][0] == 1 && m_map[Math.min(i + 1,m_map.length - 1)][j][0] == 1 && m_map[i][Math.max(j - 1,0)][0] == 1 && m_map[i][Math.min(j + 1,m_map[i].length - 1)][0] == 1)
+					if ((m_map[i][j][0] == 1 || m_map[i][j][0] == 3)
+					&& m_map[Math.max(i - 1, 0)][j][0] == 1 && m_map[Math.min(i + 1, m_map.length - 1)][j][0] == 1 
+					&& m_map[i][Math.max(j - 1,0)][0] == 1 && m_map[i][Math.min(j + 1,m_map[i].length - 1)][0] == 1)
 					{
 						continue;
 					}
-					/*if (m_map[i][j][0] == 1 && m_map[Math.max(i - 1,0)][j][1] == 1 && m_map[i][Math.min(j + 1,m_map[i].length)][1] == 1 && m_map[i][Math.max(i - 1,0)][1] == 1 &&m_map[i][j][1] == 1) continue;
-					if (m_map[i][j][0] == 1 && m_map[Math.max(i - 1, 0)][j][1] == 3 && m_map[i][Math.min(j + 1, m_map[i].length)][1] == 3 && m_map[i][Math.max(i - 1, 0)][1] == 3 && m_map[i][j][1] == 3) continue;*/
-					for (var k:int = 0; k < m_CharacterList.length; k++) 
+					for (var k:int = 0; k < CHARACTERS.length; k++) 
 					{
-						m_CharacterList[k].hitBlock(tileObjects[i][j]); //Revisar la utilidad de obj.SetCollisionNum
+						CHARACTERS[k].hitBlock(tileObjects[i][j]); //Revisar la utilidad de obj.SetCollisionNum
+					}
+					for (k = 0; k < PROJECTILES.length; k++) 
+					{
+						PROJECTILES[k].hitBlock(tileObjects[i][j]); //Revisar la utilidad de obj.SetCollisionNum
 					}					
 					for (k = 0; k < m_EnemiesList.length; k++) 
 					{
@@ -312,7 +340,7 @@ package com.smbc.engine
 					{
 						m_ItemsList[k].hitBlock(tileObjects[i][j]); //Revisar la utilidad de obj.SetCollisionNum
 					}
-					tileObjects[i][j].visible = true;
+					//tileObjects[i][j].visible = true;
 					tileObjects[i][j].PerformAll();
 				}
 			}
@@ -326,9 +354,13 @@ package com.smbc.engine
 				{
 					m_ItemsList[k].hitBlock(m_gameObjectList[i]);
 				}
-				for (k = 0; k < m_CharacterList.length; k++) 
+				for (k = 0; k < CHARACTERS.length; k++) 
 				{
-					m_CharacterList[k].hitBlock(m_gameObjectList[i]);
+					CHARACTERS[k].hitBlock(m_gameObjectList[i]);
+				}				
+				for (k = 0; k < PROJECTILES.length; k++) 
+				{
+					PROJECTILES[k].hitBlock(m_gameObjectList[i]);
 				}
 			}
 		}
@@ -336,9 +368,9 @@ package com.smbc.engine
 		public function performAll(e:Event):void 
 		{
 			//Revisar
-			for (var i:int = 0; i < m_CharacterList.length; i++) 
+			for (var i:int = 0; i < CHARACTERS.length; i++) 
 			{
-				m_CharacterList[i].update();
+				CHARACTERS[i].update();
 			}
 			if (!m_levelPaused)
 			{
@@ -361,7 +393,7 @@ package com.smbc.engine
 						continue;
 					}
 					m_ItemsList[i].update();
-				}			
+				}
 				for (i = 0; i < m_gameObjectList.length; i++) 
 				{
 					if ((m_gameObjectList[i].x < 16 * (xAxisMin - 1) || m_gameObjectList[i].x > 16 * (xAxisMax - 1))){
@@ -369,6 +401,14 @@ package com.smbc.engine
 						m_gameObjectList[i].removeListener();
 						m_gameObjectList.splice(i, 1);
 					}
+				}				
+				for (i = 0; i < PROJECTILES.length; i++) 
+				{
+					if ((PROJECTILES[i].x < 16 * (xAxisMin - 1) || PROJECTILES[i].x > 16 * (xAxisMax - 1))){
+						removeProjectile(i);
+						continue;
+					}
+					PROJECTILES[i].update();
 				}
 				m_frameInstance++;
 				checkHitboxes();
@@ -379,8 +419,8 @@ package com.smbc.engine
 					addingBlocks();
 					removeBlocks();
 				}
-				m_vcam.x = Math.max(m_vcam.width / 2, m_CharacterList[0].x);
-				m_vcam.y = Math.min((m_map.length -1) * 16 - m_vcam.height/2,m_CharacterList[0].y);
+				m_vcam.x = Math.max(m_vcam.width / 2, CHARACTERS[0].x);
+				m_vcam.y = Math.min((m_map.length -1) * 16 - m_vcam.height/2,CHARACTERS[0].y);
 			}
 			/*if (m_enemieTest.x <= 16 * (xAxisMax - 1) && m_enemieTest.x >= 16 * (xAxisMin - 1))
 			{
@@ -483,6 +523,14 @@ package com.smbc.engine
 			if (i < 0) return;
 			m_EnemiesList[i].removeListener();
 			m_EnemiesList.splice(i, 1);
+		}		
+		
+		public function removeProjectile(i:int):void 
+		{
+			if (i < 0) return;
+			PROJECTILES[i].m_isDead = true;
+			PROJECTILES[i].removeListener();
+			PROJECTILES.splice(i, 1);
 		}
 		
 		public function addItem(curObj:*,itemType:int,character:*):void 
@@ -506,14 +554,14 @@ package com.smbc.engine
                 if (GameController.m_playerSettings[i].character == null) continue;
                 makePlayer(i);
             };
-			for (i = 0; i < m_CharacterList.length; i++) 
+			for (i = 0; i < CHARACTERS.length; i++) 
 			{
-				m_CharacterList[i].x = Main.Root.m_currentStartPoint.x + (16 * i);
-				m_CharacterList[i].y = Main.Root.m_currentStartPoint.y;
+				CHARACTERS[i].x = Main.Root.m_currentStartPoint.x + (16 * i);
+				CHARACTERS[i].y = Main.Root.m_currentStartPoint.y;
 			}
-			for (i = 0; i < m_CharacterList.length; i++) 
+			for (i = 0; i < CHARACTERS.length; i++) 
 			{
-				addChild(m_CharacterList[i]);
+				addChild(CHARACTERS[i]);
 			}
 			/*m_character.scaleX = 1;
 			m_character.scaleY = 1;
@@ -530,8 +578,14 @@ package com.smbc.engine
 			characterStats.importData({
 			"player_id":playerNum
 			});
-			m_CharacterList.push(new Character(characterStats,GameController.m_playerSettings[playerNum]));
+			CHARACTERS.push(new Character(characterStats,GameController.m_playerSettings[playerNum]));
 		}
+		
+		public function addProjectile(projectile:Projectile):Projectile
+        {
+            this.PROJECTILES.unshift(projectile);
+            return (projectile);
+        }
 		
 	}
 	
